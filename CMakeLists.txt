@@ -1,0 +1,4 @@
+cmake_minimum_required(VERSION 3.5)
+project(traceur)
+
+add_subdirectory(traceur-frontend-glut)
