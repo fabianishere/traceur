@@ -1,8 +1,14 @@
 #include <stdio.h>
+#include <limits>
 #ifdef WIN32
 #include <windows.h>
 #endif
+
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#else
 #include <GL/glut.h>
+#endif
 #include "raytracing.h"
 
 
@@ -23,7 +29,7 @@ void init()
 	//PLEASE ADAPT THE LINE BELOW TO THE FULL PATH OF THE dodgeColorTest.obj
 	//model, e.g., "C:/temp/myData/GraphicsIsFun/dodgeColorTest.obj", 
 	//otherwise the application will not load properly
-    MyMesh.loadMesh("dodgeColorTest.obj", true);
+    MyMesh.loadMesh("cube.obj", true);
 	MyMesh.computeVertexNormals();
 
 	//one first move: initialize the first light source
@@ -32,12 +38,82 @@ void init()
 	MyLightPositions.push_back(MyCameraPosition);
 }
 
+inline double intersection(const Vec3Df &origin, const Vec3Df &dir, const Triangle &triangle)
+{
+	auto infinity = std::numeric_limits<double>::infinity();
+	auto &vertices = MyMesh.vertices;
+	auto o = vertices[triangle.v[0]].p;
+	auto u = vertices[triangle.v[1]].p - o;
+	auto v = vertices[triangle.v[2]].p - o;
+
+
+	// Compute the plane's normal
+	auto N = Vec3Df::crossProduct(u, v);
+
+	// Calculate angle of ray relative to plane's normal
+	auto d = Vec3Df::dotProduct(N, dir);
+
+	// No intersection if the ray is parallel to plane
+	if (std::abs(d) < 0.000000f) {
+		return infinity;
+	}
+
+	// Solve t for equation P = O + tD
+	double t = Vec3Df::dotProduct(o - origin, N) / d;
+
+	// The triangle is behind the ray
+	if (t < 0) {
+		return infinity;
+	}
+
+	// Calculate the point of intersection
+	auto p = origin + t * dir;
+
+	float d00 = Vec3Df::dotProduct(u, u);
+	float d01 = Vec3Df::dotProduct(u, v);
+	float d11 = Vec3Df::dotProduct(v, v);
+	float d20 = Vec3Df::dotProduct(p - o, u);
+	float d21 = Vec3Df::dotProduct(p - o, v);
+	float invDenom = 1.0 / (d00 * d11 - d01 * d01);
+
+	auto a = (d11 * d20 - d01 * d21) * invDenom;
+	auto b = (d00 * d21 - d01 * d20) * invDenom;
+	
+	// Intersection with triangle's plane but outside triangle
+	if (a < -0.000f || b < -0.000f || a + b > 1) {
+		return infinity;
+	}
+
+	return t;
+}
+
+
 //return the color of your pixel.
 Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 {
-	return Vec3Df(dest[0],dest[1],dest[2]);
-}
+	int index = -1;
+	double infinity = std::numeric_limits<double>::infinity();
+	double nearest = infinity;
 
+	for (int i = 0; i < MyMesh.triangles.size(); i++) {
+		Triangle &triangle = MyMesh.triangles[i];
+		auto dir = dest - origin;
+		dir.normalize();
+		double distance = intersection(origin, dir, triangle);
+		if (distance < nearest) {
+			nearest = distance;
+			index = i;
+		}
+	}
+
+	if (index != -1) {
+		int materialIndex = MyMesh.triangleMaterials[index];
+		Material &material = MyMesh.materials[materialIndex];
+		return material.Kd();
+	}
+
+	return Vec3Df();
+}
 
 
 void yourDebugDraw()
