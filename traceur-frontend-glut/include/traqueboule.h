@@ -1,3 +1,12 @@
+
+
+//PLEASE IGNORE THIS FILE !!!! 
+//IT DEALS WITH THE TRACKBALL
+//IT IS COMPLEX and has French comments ;) 
+//good times...
+
+
+
 /** \file traqueboule.h
  
 Utilitaires pour appliquer une traqueboule a une fenetre OpenGL.
@@ -14,6 +23,7 @@ Utilitaires pour appliquer une traqueboule a une fenetre OpenGL.
 #else
 #include <GL/glut.h>
 #endif
+
 #include <math.h>
 #include "matrix.h"
 #include "stdio.h"

@@ -7,9 +7,15 @@
 #include <string>
 
 
+//Material class of the mesh
+//while colors seem useful, also texture names are loaded
+//texture coordinates are also supported, 
+//YOU DO NOT have to use textures, if you do not want to! 
+//The materials are loaded from the mesh's .mtl file.
+//You can modify the materials yourself in a text editor
+//try it for the dodge (car model) that is provided
 class Material
     {
-        
     public:
 
         Material() { cleanup(); };
@@ -19,7 +25,7 @@ class Material
             *this=m;
         };
  
-        Material& operator=(const Material& m)
+        Material & operator=(const Material & m)
         { 
             Kd_=m.Kd_;         
             Kd_is_set_=m.Kd_is_set_; // diffuse
@@ -34,8 +40,8 @@ class Material
             Ni_is_set_=m.Ni_is_set_; // specular
 
             Tr_=m.Tr_;
-            Tr_is_set_=m.Tr_is_set_; // transperency
-            illum_ = m.illum_;
+            Tr_is_set_=m.Tr_is_set_; // transparency (use this value to trade off reflection/refraction
+            illum_ = m.illum_;		
             name_=m.name_;
             return (*this);
         };
@@ -128,7 +134,9 @@ class Material
 /************************************************************
  * Triangle Class
  ************************************************************/
-class Triangle {
+//A triangle contains 3 indices to refer to vertex positions 
+//and 3 indices to refer to texture coordinates (optional)
+ class Triangle {
 public:
     inline Triangle () {
         v[0] = v[1] = v[2] = 0;
@@ -162,12 +170,14 @@ public:
         t[2] = t2.v[2];
         return (*this);
     }
+	//vertex position 
     unsigned int v[3];
+	//texture coordinate
     unsigned int t[3];
 };
 
 /************************************************************
- * Class de maillage basique
+ * Basic Mesh class
  ************************************************************/
 class Mesh {
 public:
@@ -179,25 +189,26 @@ public:
     void draw();
     void drawSmooth();
 
-	//this is relevant for you:
-	//Vertices are the vertex positions, textures, and normals of the mesh.
+	//Vertices are the vertex positions, and normals of the mesh.
 	std::vector<Vertex> vertices;
-	//this is relevant for you:
 	//texCoords are the texture coordinates, these are DIFFERENT indices in triangles.
-	//in the current version, if you use textures, then you have to use texture coords everywhere...
-	//I might send an update of the code to change this.
-	//for convenience, Vec3Df is used, although only 2D tex coordinates are read corresponding to the x,y entry of Vec3Df.
+	//in the current version, if you use textures, then you have to use texture coords everywhere
+	//for convenience, Vec3Df is used, although only 2D tex coordinates are stored (x,y entry of the Vec3Df).
 	std::vector<Vec3Df> texcoords;
 	//Triangles are the indices of the vertices involved in a triangle.
-	//a triplet corresponds to one triangle. 
-	//A Triangle contains the indeces of the three vertices that are neighboring
+	//A triangle, thus, contains a triplet of values corresponding to the 3 vertices of a triangle. 
     std::vector<Triangle> triangles;
 	//These are the material properties
-	//each triangle (!) has a material. Use the triangle index to receive a material INDEX
+	//each triangle (!), NOT (!) each vertex, has a material. 
+	//Use the triangle index to receive a material INDEX
 	std::vector<unsigned int> triangleMaterials;
 	//using the material index, you can then recover the material from this vector
 	//the class material is defined just above
 	std::vector<Material> materials;
+	
+	//As an example:
+	//triangle triangles[i] has material index triangleMaterials[i]
+	//and uses Material materials[triangleMaterials[i]].
 };
 
 #endif // MESH_H

@@ -1,4 +1,3 @@
-#include "mesh.h"
 #ifdef WIN32
 #include <windows.h>
 #endif
@@ -16,31 +15,26 @@
 #include <iostream>
 #include <fstream>
 
+#include "mesh.h"
+
+/************************************************************
+ * SKIP THIS FILE
+ ************************************************************/
+//This is the code to load a mesh and a material file. 
+//it is not beautiful, but works on all tested systems
+//IGNORE this file you do not need to understand this code,
+//nor change it.
 
    
 using namespace std;
-
+//dirty hack... do not do this at home... ;)
 const unsigned int LINE_LEN=256;
 
-
-/**
- * @brief Adds a new line to the end of file if none exists. Otherwise code will crash on linux
- * @param filename - The name of the input file
- */
-void addNewLine(const char* filename)
-{
-    {
-        std::ofstream out;
-        out.open(filename, std::ios::app);
-        out << std::endl;
-    }
-}
 
 /************************************************************
  * Normal calculations
  ************************************************************/
 void Mesh::computeVertexNormals () {
-    //initialisation des normales des vertex
     for (unsigned int i = 0; i < vertices.size (); i++)
         vertices[i].n = Vec3Df (0.0, 0.0, 0.0);
 
@@ -158,44 +152,36 @@ bool Mesh::loadMesh(const char * filename, bool randomizeTriangulation)
     }
     memset(&s, 0, LINE_LEN);
 
-#ifndef WIN32
-    addNewLine(filename);
-#endif
     FILE * in;
     in =fopen(filename,"r");
 
     while(in && !feof(in) && fgets(s, LINE_LEN, in))
     {     
         // comment
-        if (s[0] == '#' || isspace(s[0])) continue;   
+        if (s[0] == '#' || isspace(s[0]) || s[0]=='\0') continue;   
 
         // material file
         else if (strncmp(s, "mtllib ", 7)==0)
         {
-#ifdef WIN32
             char mtlfile[128];
-            std::string t=&(s[7]);
-            if (!t.empty() && t[t.length()-1] == '\n') {
-                t.erase(t.length()-1);
-            }
-            {
-                std::string file = path_.append(t);//mtlfile);
-                file = file.substr(0, file.size()-1);
-                std::cerr << "DEBUG Material file: " << file << std::endl;
-                printf("Load material file %s\n", file.c_str());
-                loadMtl(file.c_str(), materialIndex);
-            }
-#else
             char *p0 = s+6, *p1;
             while( isspace(*++p0) ); p1=p0;
-            while(!isspace(*p1)) ++p1; *p1='\0';
+            std::string t = p1;
+			int i;
+            for (i = 0; i < t.length(); ++i)
             {
-                std::string file = path_.append(p0);
-                file = file.substr(0, file.size());
-                printf("Load material file %s\n", file.c_str());
-                loadMtl(file.c_str(), materialIndex);
+				if (t[i] < 32 || t[i] == 255)
+				{
+					break; 
+				}
             }
-#endif
+			std::string file;
+			if (t.length() == i)
+	    		file = path_.append(t);
+			else
+            file = path_.append(t.substr(0, i));
+			printf("Load material file %s\n", file.c_str());
+			loadMtl(file.c_str(), materialIndex);
         }
         // usemtl
         else if (strncmp(s, "usemtl ", 7)==0)
@@ -210,7 +196,6 @@ bool Mesh::loadMesh(const char * filename, bool randomizeTriangulation)
                 matname="";
             }
         }
-
         // vertex
         else if (strncmp(s, "v ", 2) == 0)
         {
@@ -355,9 +340,6 @@ bool Mesh::loadMesh(const char * filename, bool randomizeTriangulation)
 
 bool Mesh::loadMtl(const char * filename, std::map<string, unsigned int> & materialIndex)
 {
-#ifndef WIN32
-    addNewLine(filename);
-#endif
     FILE * _in;
     _in = fopen(filename, "r" );
     if ( !_in )
@@ -375,15 +357,17 @@ bool Mesh::loadMtl(const char * filename, std::map<string, unsigned int> & mater
     bool        indef = false;
 
     memset(line,0,LINE_LEN);
-    while( _in && !feof(_in) && fgets(line, LINE_LEN, _in) )
+    while( _in && !feof(_in) )
     {
+		fgets(line, LINE_LEN, _in);
+
         if (line[0] == '#') // skip comments
         {
             memset(line,0,LINE_LEN);
             continue;
         }
 
-        else if( isspace(line[0]) )
+        else if( isspace(line[0])||line[0]=='\0')
         {
             if (indef && !key.empty() && mat.is_valid())
             {
@@ -395,6 +379,8 @@ bool Mesh::loadMtl(const char * filename, std::map<string, unsigned int> & mater
                 }
                 mat.cleanup();
             }
+			if (line[0]=='\0')
+				break;
         }
         else if (strncmp(line, "newmtl ", 7)==0) // begin new material definition
         {

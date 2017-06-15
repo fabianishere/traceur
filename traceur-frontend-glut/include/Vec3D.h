@@ -229,7 +229,7 @@ public:
         return polar;
     }
 
-    // polar to cartesion coordinates
+    // polar to cartesian coordinates
     // input:
     // [0] = length
     // [1] = angle with z-axis
@@ -241,6 +241,8 @@ public:
         cart[2] = v[0] * (T) cos (v[1]);
         return cart;
     }
+	//attention, this function might not do, what you expect if v2 is not normalized.
+	//This is no bug, but wanted for some applications.
     static inline Vec3D projectOntoVector (const Vec3D & v1, const Vec3D & v2) {
         return v2 * dotProduct (v1, v2);
     }
