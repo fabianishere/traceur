@@ -31,6 +31,7 @@
 #include <traceur/core/kernel/ray.hpp>
 #include <traceur/core/kernel/hit.hpp>
 #include <traceur/core/material/material.hpp>
+#include <traceur/core/scene/graph/visitor.hpp>
 
 namespace traceur {
 	/**
@@ -75,6 +76,14 @@ namespace traceur {
 		 * <code>false</code>.
 		 */
 		inline virtual bool intersect(const traceur::Ray &, traceur::Hit &) const = 0;
+
+		/**
+		 * Accept a {@link SceneGraphVisitor} instance to visit this node in  
+		 * the graph of the scene.
+		 *
+		 * @param[in] visitor The visitor to accept.
+		 */
+		inline virtual void accept(traceur::SceneGraphVisitor &) const = 0;
 	};
 }
 

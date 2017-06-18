@@ -109,6 +109,17 @@ namespace traceur {
 
 			return true;
 		}
+
+		/**
+		 * Accept a {@link SceneGraphVisitor} instance to visit this node in  
+		 * the graph of the scene.
+		 *
+		 * @param[in] visitor The visitor to accept.
+		 */
+		inline virtual void accept(traceur::SceneGraphVisitor &visitor) const final
+		{
+			visitor.visit(*this);
+		}
 	};
 }
 

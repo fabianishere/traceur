@@ -21,46 +21,51 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef TRACEUR_CORE_SCENE_GRAPH_GRAPH_H
-#define TRACEUR_CORE_SCENE_GRAPH_GRAPH_H
-
-#include <traceur/core/scene/graph/visitor.hpp>
-#include <traceur/core/kernel/ray.hpp>
-#include <traceur/core/kernel/hit.hpp>
+#ifndef TRACEUR_CORE_SCENE_GRAPH_VISITOR_H
+#define TRACEUR_CORE_SCENE_GRAPH_VISITOR_H
 
 namespace traceur {
+	/* Forward declarations */
+	class Primitive;
+	class Sphere;
+	class Triangle;
+
 	/**
-	 * An immutable (acceleration) data structure which arranges the logical
-	 * and often (but not necessarily) spatial representation of a graphical
-	 * scene.
+	 * A visitor of the {@link SceneGraph} that traverses the graph.
 	 */
-	class SceneGraph {
+	class SceneGraphVisitor {
 	public:
 		/**
-		 * Deconstruct the {@link SceneGraph} instance.
+		 * Construct a {@link SceneGraphVisitor} instance.
 		 */
-		virtual ~SceneGraph() {}
+		SceneGraphVisitor() {}
 
 		/**
-		 * Determine whether the given ray intersects a shape in the geometry
-		 * of this graph.
-		 *
-		 * @param[in] ray The ray to intersect with a shape.
-		 * @param[in] hit The intersection structure to which the details will
-		 * be written to.
-		 * @return <code>true</code> if a shape intersects the ray, otherwise
-		 * <code>false</code>.
+		 * Deconstruct the {@link SceneGraphVisitor} instance.
 		 */
-		inline virtual bool intersect(const traceur::Ray &, traceur::Hit &) const = 0;
+		virtual ~SceneGraphVisitor() {}
 
 		/**
-		 * Accept a {@link SceneGraphVisitor} instance to traverse this scene 
-		 * graph.
+		 * Visit a {@link Primitive} node in the scene graph.
 		 *
-		 * @param[in] visitor The visitor to accept.
+		 * @param[in] node The node to visit.
 		 */
-		virtual void traverse(traceur::SceneGraphVisitor &) const = 0;
+		virtual void visit(const traceur::Primitive &) {}
+	
+		/**
+		 * Visit a {@link Sphere} primitive in the scene graph.
+		 *
+		 * @param[in] node The node to visit.
+		 */
+		virtual void visit(const traceur::Sphere &) {}
+
+		/**
+		 * Visit a {@link Triangle} primitive in the scene graph.
+		 *
+		 * @param[in] node The node to visit.
+		 */
+		virtual void visit(const traceur::Triangle &) {}
 	};
 }
 
-#endif /* TRACEUR_CORE_SCENE_GRAPH_GRAPH_H */
+#endif /* TRACEUR_CORE_SCENE_GRAPH_VISITOR_H */

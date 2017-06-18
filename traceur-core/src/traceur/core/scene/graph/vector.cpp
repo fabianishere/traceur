@@ -42,6 +42,13 @@ inline bool traceur::VectorSceneGraph::intersect(const traceur::Ray &ray, traceu
 	return intersection;
 }
 
+void traceur::VectorSceneGraph::traverse(traceur::SceneGraphVisitor &visitor) const
+{
+	for (auto &primitive : *nodes) {
+		primitive->accept(visitor);
+	}
+}
+
 void traceur::VectorSceneGraphBuilder::add(const std::shared_ptr<traceur::Primitive> primitive)
 {
 	nodes.push_back(primitive);
