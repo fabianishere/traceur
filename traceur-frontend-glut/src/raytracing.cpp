@@ -11,6 +11,11 @@
 #endif
 #include "raytracing.h"
 
+#include <traceur/core/kernel/basic.hpp>
+#include <traceur/core/scene/graph/factory.hpp>
+#include <traceur/core/scene/graph/vector.hpp>
+#include <traceur/loader/obj.hpp>
+
 
 //temporary variables
 //these are only used to illustrate 
@@ -18,6 +23,10 @@
 Vec3Df testRayOrigin;
 Vec3Df testRayDestination;
 
+// The rendering kernel to use
+std::unique_ptr<traceur::BasicKernel> kernel;
+// The scene we want to render
+std::unique_ptr<traceur::Scene> scene;
 
 //use this function for any preprocessing of the mesh.
 void init()
@@ -36,6 +45,12 @@ void init()
 	//at least ONE light source has to be in the scene!!!
 	//here, we set it to the current location of the camera
 	MyLightPositions.push_back(MyCameraPosition);
+
+	auto factory = traceur::make_factory<traceur::VectorSceneGraphBuilder>();
+	auto loader = std::make_unique<traceur::ObjLoader>(std::move(factory));
+	scene = loader->load("cube.obj");
+
+	kernel = std::make_unique<traceur::BasicKernel>();
 }
 
 inline double intersection(const Vec3Df &origin, const Vec3Df &dir, const Triangle &triangle)
@@ -87,11 +102,22 @@ inline double intersection(const Vec3Df &origin, const Vec3Df &dir, const Triang
 	return t;
 }
 
+glm::vec3 toGLM(const Vec3Df &v) 
+{
+	return glm::vec3(v[0], v[1], v[2]);
+}
+
+Vec3Df fromGLM(const glm::vec3 &v) {
+	return Vec3Df(v[0], v[1], v[2]);
+}
+
 
 //return the color of your pixel.
 Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 {
-	int index = -1;
+	traceur::Ray ray(toGLM(origin), toGLM(dest - origin));
+	return fromGLM(kernel->trace(*scene, ray));
+	/*int index = -1;
 	double infinity = std::numeric_limits<double>::infinity();
 	double nearest = infinity;
 
@@ -112,7 +138,7 @@ Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 		return material.Kd();
 	}
 
-	return Vec3Df();
+	return Vec3Df();*/
 }
 
 

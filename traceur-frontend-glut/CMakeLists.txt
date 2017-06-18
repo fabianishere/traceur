@@ -7,4 +7,4 @@ find_package(GLUT REQUIRED)
 
 add_executable(traceur-frontend-glut src/main.cpp src/mesh.cpp src/raytracing.cpp)
 target_include_directories(traceur-frontend-glut PRIVATE include/)
-target_link_libraries(traceur-frontend-glut GLUT::GLUT OpenGL::GL)
+target_link_libraries(traceur-frontend-glut traceur-loader-obj GLUT::GLUT OpenGL::GL)

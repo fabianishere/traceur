@@ -1,6 +1,10 @@
 #ifndef RAYTRACING_Hjdslkjfadjfasljf
 #define RAYTRACING_Hjdslkjfadjfasljf
 #include <vector>
+#include <memory>
+
+#include <traceur/core/scene/scene.hpp>
+
 #include "mesh.h"
 
 //Welcome to your MAIN PROJECT...
