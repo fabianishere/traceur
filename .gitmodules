@@ -1,0 +1,3 @@
+[submodule "traceur-core/deps/glm"]
+	path = traceur-core/deps/glm
+	url = https://github.com/g-truc/glm.git
