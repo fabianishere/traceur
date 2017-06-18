@@ -73,7 +73,7 @@ namespace traceur {
 			double t1 = b - d;
 			float lambda = t1 > 0 ? t1 : t2;
 			
-			hit.shape = this;
+			hit.primitive = this;
 			hit.distance = lambda;
 			hit.position = ray.origin + lambda * ray.direction;
 			hit.normal = glm::normalize((ray.origin - origin) + lambda * ray.direction);
