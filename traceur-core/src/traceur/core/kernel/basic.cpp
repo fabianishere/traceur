@@ -38,6 +38,7 @@ traceur::Pixel traceur::BasicKernel::trace(const traceur::Scene &scene, const tr
 std::unique_ptr<traceur::Film> traceur::BasicKernel::render(const traceur::Scene &scene, const traceur::Camera &camera) const
 {
 	/* TODO */
+	return std::make_unique<traceur::DirectFilm>(0, 0);
 }
 
 void traceur::BasicKernel::render(const traceur::Scene &scene, const traceur::Camera &camera, traceur::Film &film, glm::vec2 &offset) const

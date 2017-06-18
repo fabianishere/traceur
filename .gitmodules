@@ -1,0 +1,6 @@
+[submodule "traceur-core/deps/glm"]
+	path = traceur-core/deps/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "traceur-frontend-glut/deps/freeglut"]
+	path = traceur-frontend-glut/deps/freeglut
+	url = https://github.com/dcnieho/FreeGLUT.git
