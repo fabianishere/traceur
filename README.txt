@@ -20,23 +20,12 @@
     abstracting away the raytracing kernels, acceleration structures, scene
     loaders and exporters.
 
-  * loader-assimp
-    The loader-assimp module provides a scene loaders using the Assimp library
-    for parsing, providing support for up to 40 3D file formats.
+  * loader-obj
+    The loader-obj module provides a basic Wavefront 3d object scene loader, 
+    with support for materials.
 
   * export-ppm
     The export-ppm module provides a simple exporter for the ppm file format.
-
-  * export-png
-    The export-png module provides an exporter for the PNG file format using
-    LodePNG.
-
-  * frontend-cli
-    The frontend-cli module provides a command line interface for the project.
-
-  * frontend-glfw
-    The frontend-glfw module provides a modern graphical frontend for the 
-    project, which uses GLFW, GLEW and GLM for rendering purposes.
 
   * frontend-glut
     The frontend-glut module is the legacy GLUT frontend of the project based 
