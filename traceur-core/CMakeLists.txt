@@ -28,8 +28,29 @@ else()
 endif()
 
 add_library(traceur-core STATIC
+	include/traceur/core/kernel/kernel.hpp
+	include/traceur/core/kernel/pixel.hpp
+	include/traceur/core/kernel/film.hpp
+	include/traceur/core/kernel/hit.hpp
+	include/traceur/core/kernel/ray.hpp
+	include/traceur/core/kernel/basic.hpp
 	src/traceur/core/kernel/basic.cpp
+
+	include/traceur/core/lightning/light.hpp
+	include/traceur/core/material/material.hpp
+	include/traceur/core/scene/scene.hpp
+	include/traceur/core/scene/camera.hpp
+	include/traceur/core/scene/graph/graph.hpp
+	include/traceur/core/scene/graph/builder.hpp
+	include/traceur/core/scene/graph/factory.hpp
+	include/traceur/core/scene/graph/visitor.hpp
+	include/traceur/core/scene/primitive/primitive.hpp
+	include/traceur/core/scene/primitive/box.hpp
+	include/traceur/core/scene/primitive/triangle.hpp
 	src/traceur/core/scene/graph/vector.cpp
+
+	include/traceur/exporter/exporter.hpp
+	include/traceur/loader/loader.hpp
 )
 target_include_directories(traceur-core PUBLIC include/)
 target_link_libraries(traceur-core GLM::GLM)
