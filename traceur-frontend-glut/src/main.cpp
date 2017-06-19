@@ -33,8 +33,8 @@ glm::vec3 MyCameraPosition;
 // but following the camera instead.
 std::vector<glm::vec3> MyLightPositions;
 
-constexpr unsigned int WindowSize_X = 800;  // resolution X
-constexpr unsigned int WindowSize_Y = 800;  // resolution Y
+const unsigned int WindowSize_X = 800;  // resolution X
+const unsigned int WindowSize_Y = 800;  // resolution Y
 
 /**
  * Main function, which is drawing an image (frame) on the screen
