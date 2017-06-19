@@ -16,6 +16,8 @@
 #include <traceur/core/scene/graph/vector.hpp>
 #include <traceur/loader/obj.hpp>
 
+#include <traceur/frontend/glut/visitor.hpp>
+
 
 //temporary variables
 //these are only used to illustrate 
@@ -27,20 +29,12 @@ Vec3Df testRayDestination;
 std::unique_ptr<traceur::BasicKernel> kernel;
 // The scene we want to render
 std::unique_ptr<traceur::Scene> scene;
+// The scene graph visitor to draw the scene.
+std::unique_ptr<traceur::SceneGraphVisitor> visitor;
 
 //use this function for any preprocessing of the mesh.
 void init()
-{
-	//load the mesh file
-	//please realize that not all OBJ files will successfully load.
-	//Nonetheless, if they come from Blender, they should, if they 
-	//are exported as WavefrontOBJ.
-	//PLEASE ADAPT THE LINE BELOW TO THE FULL PATH OF THE dodgeColorTest.obj
-	//model, e.g., "C:/temp/myData/GraphicsIsFun/dodgeColorTest.obj", 
-	//otherwise the application will not load properly
-    MyMesh.loadMesh("cube.obj", true);
-	MyMesh.computeVertexNormals();
-
+{	
 	//one first move: initialize the first light source
 	//at least ONE light source has to be in the scene!!!
 	//here, we set it to the current location of the camera
@@ -51,55 +45,7 @@ void init()
 	scene = loader->load("cube.obj");
 
 	kernel = std::make_unique<traceur::BasicKernel>();
-}
-
-inline double intersection(const Vec3Df &origin, const Vec3Df &dir, const Triangle &triangle)
-{
-	auto infinity = std::numeric_limits<double>::infinity();
-	auto &vertices = MyMesh.vertices;
-	auto o = vertices[triangle.v[0]].p;
-	auto u = vertices[triangle.v[1]].p - o;
-	auto v = vertices[triangle.v[2]].p - o;
-
-
-	// Compute the plane's normal
-	auto N = Vec3Df::crossProduct(u, v);
-
-	// Calculate angle of ray relative to plane's normal
-	auto d = Vec3Df::dotProduct(N, dir);
-
-	// No intersection if the ray is parallel to plane
-	if (std::abs(d) < 0.000000f) {
-		return infinity;
-	}
-
-	// Solve t for equation P = O + tD
-	double t = Vec3Df::dotProduct(o - origin, N) / d;
-
-	// The triangle is behind the ray
-	if (t < 0) {
-		return infinity;
-	}
-
-	// Calculate the point of intersection
-	auto p = origin + t * dir;
-
-	float d00 = Vec3Df::dotProduct(u, u);
-	float d01 = Vec3Df::dotProduct(u, v);
-	float d11 = Vec3Df::dotProduct(v, v);
-	float d20 = Vec3Df::dotProduct(p - o, u);
-	float d21 = Vec3Df::dotProduct(p - o, v);
-	float invDenom = 1.0 / (d00 * d11 - d01 * d01);
-
-	auto a = (d11 * d20 - d01 * d21) * invDenom;
-	auto b = (d00 * d21 - d01 * d20) * invDenom;
-	
-	// Intersection with triangle's plane but outside triangle
-	if (a < -0.000f || b < -0.000f || a + b > 1) {
-		return infinity;
-	}
-
-	return t;
+	visitor = std::make_unique<traceur::OpenGLSceneGraphVisitor>();
 }
 
 glm::vec3 toGLM(const Vec3Df &v) 
@@ -111,34 +57,11 @@ Vec3Df fromGLM(const glm::vec3 &v) {
 	return Vec3Df(v[0], v[1], v[2]);
 }
 
-
 //return the color of your pixel.
 Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 {
 	traceur::Ray ray(toGLM(origin), toGLM(dest - origin));
 	return fromGLM(kernel->trace(*scene, ray));
-	/*int index = -1;
-	double infinity = std::numeric_limits<double>::infinity();
-	double nearest = infinity;
-
-	for (int i = 0; i < MyMesh.triangles.size(); i++) {
-		Triangle &triangle = MyMesh.triangles[i];
-		auto dir = dest - origin;
-		dir.normalize();
-		double distance = intersection(origin, dir, triangle);
-		if (distance < nearest) {
-			nearest = distance;
-			index = i;
-		}
-	}
-
-	if (index != -1) {
-		int materialIndex = MyMesh.triangleMaterials[index];
-		Material &material = MyMesh.materials[materialIndex];
-		return material.Kd();
-	}
-
-	return Vec3Df();*/
 }
 
 
@@ -146,9 +69,10 @@ void yourDebugDraw()
 {
 	//draw open gl debug stuff
 	//this function is called every frame
+	
+	// Draw the loaded scene graph
+	scene->graph->traverse(*visitor);
 
-	//let's draw the mesh
-	MyMesh.draw();
 	
 	//let's draw the lights in the scene as points
 	glPushAttrib(GL_ALL_ATTRIB_BITS); //store all GL attributes
@@ -156,8 +80,8 @@ void yourDebugDraw()
 	glColor3f(1,1,1);
 	glPointSize(10);
 	glBegin(GL_POINTS);
-	for (int i=0;i<MyLightPositions.size();++i)
-		glVertex3fv(MyLightPositions[i].pointer());
+		for (int i=0;i<MyLightPositions.size();++i)
+			glVertex3fv(MyLightPositions[i].pointer());
 	glEnd();
 	glPopAttrib();//restore all GL attributes
 	//The Attrib commands maintain the state. 
@@ -170,23 +94,16 @@ void yourDebugDraw()
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	glDisable(GL_LIGHTING);
 	glBegin(GL_LINES);
-	glColor3f(0,1,1);
-	glVertex3f(testRayOrigin[0], testRayOrigin[1], testRayOrigin[2]);
-	glColor3f(0,0,1);
-	glVertex3f(testRayDestination[0], testRayDestination[1], testRayDestination[2]);
+		glColor3f(0,1,1);
+		glVertex3f(testRayOrigin[0], testRayOrigin[1], testRayOrigin[2]);
+		glColor3f(0,0,1);
+		glVertex3f(testRayDestination[0], testRayDestination[1], testRayDestination[2]);
 	glEnd();
 	glPointSize(10);
 	glBegin(GL_POINTS);
-	glVertex3fv(MyLightPositions[0].pointer());
+		glVertex3fv(MyLightPositions[0].pointer());
 	glEnd();
 	glPopAttrib();
-	
-	//draw whatever else you want...
-	////glutSolidSphere(1,10,10);
-	////allows you to draw a sphere at the origin.
-	////using a glTranslate, it can be shifted to whereever you want
-	////if you produce a sphere renderer, this 
-	////triangulated sphere is nice for the preview
 }
 
 

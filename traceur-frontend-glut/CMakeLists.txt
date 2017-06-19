@@ -29,6 +29,11 @@ else()
 	add_library(GLUT::GLUT ALIAS freeglut_static)
 endif()
 
-add_executable(traceur-frontend-glut src/main.cpp src/mesh.cpp src/raytracing.cpp)
+add_executable(traceur-frontend-glut 
+	src/main.cpp
+	src/mesh.cpp
+	src/raytracing.cpp
+	src/frontend/glut/visitor.cpp
+)
 target_include_directories(traceur-frontend-glut PRIVATE include/)
 target_link_libraries(traceur-frontend-glut traceur-loader-obj GLUT::GLUT OpenGL::GL)
