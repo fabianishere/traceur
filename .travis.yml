@@ -17,10 +17,10 @@ matrix:
             - cmake3
             - libstdc++-4.8-dev
             - freeglut3-dev
+            - libglm-dev
       env:
       - C_COMPILER=gcc-5
       - CXX_COMPILER=g++-5
-      - CMAKE_SYSTEM_NAME=Linux
       - USE_SYSTEM_GLM=OFF
       - USE_SYSTEM_GLUT=ON
     - os: linux
@@ -36,35 +36,17 @@ matrix:
             - cmake3
             - libstdc++-4.8-dev
             - freeglut3-dev
+            - libglm-dev
       env: 
       - C_COMPILER=clang-3.7
       - CXX_COMPILER=clang++-3.7
-      - CMAKE_SYSTEM_NAME=Linux
       - USE_SYSTEM_GLM=OFF
       - USE_SYSTEM_GLUT=ON
-    - os: linux
-      dist: trusty
-      compiler: gcc
-      addons:
-        apt:
-          packages:
-            - cmake3
-            - binutils-mingw-w64-x86-64
-            - g++-mingw-w64-x86-64
-            - gcc-mingw-w64-x86-64
-            - mingw-w64-x86-64-dev
-      env: 
-      - C_COMPILER=x86_64-w64-mingw32-gcc
-      - CXX_COMPILER=x86_64-w64-mingw32-g++
-      - CMAKE_SYSTEM_NAME=Windows
-      - USE_SYSTEM_GLM=OFF
-      - USE_SYSTEM_GLUT=OFF
     - os: osx
       compiler: gcc
       env:
       - C_COMPILER=gcc
       - CXX_COMPILER=g++
-      - CMAKE_SYSTEM_NAME=Darwin
       - USE_SYSTEM_GLM=OFF
       - USE_SYSTEM_GLUT=ON  
     - os: osx
@@ -72,7 +54,6 @@ matrix:
       env:
       - C_COMPILER=clang
       - CXX_COMPILER=clang++
-      - CMAKE_SYSTEM_NAME=Darwin
       - USE_SYSTEM_GLM=OFF
       - USE_SYSTEM_GLUT=ON
 
@@ -80,4 +61,4 @@ matrix:
 script:
   - mkdir build
   - cd build
-  - cmake -DUSE_SYSTEM_GLM=$USE_SYSTEM_GLM -DUSE_SYSTEM_GLUT=$USE_SYSTEM_GLUT -DCMAKE_SYSTEM_NAME=$CMAKE_SYSTEM_NAME -DCMAKE_C_COMPILER=$C_COMPILER -DCMAKE_CXX_COMPILER=$CXX_COMPILER .. && make VERBOSE=1
+  - cmake -DUSE_SYSTEM_GLM=$USE_SYSTEM_GLM -DUSE_SYSTEM_GLUT=$USE_SYSTEM_GLUT -DCMAKE_C_COMPILER=$C_COMPILER -DCMAKE_CXX_COMPILER=$CXX_COMPILER .. && make VERBOSE=1
