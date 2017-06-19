@@ -15,7 +15,11 @@ matrix:
             - g++-5
             - cmake3
             - libstdc++-4.8-dev
-      env: COMPILER=g++-5
+            - freeglut3-dev
+            - libglm-dev
+      env:
+      - COMPILER=g++-5
+      - USE_SYSTEM_LIBRARIES=ON
     - os: linux
       dist: trusty
       compiler: clang
@@ -28,16 +32,24 @@ matrix:
             - clang-3.7
             - cmake3
             - libstdc++-4.8-dev
-      env: COMPILER=clang++-3.7
+            - freeglut3-dev
+            - libglm-dev
+      env: 
+      - COMPILER=clang++-3.7
+      - USE_SYSTEM_LIBRARIES=ON
     - os: osx
       compiler: gcc
-      env: COMPILER=gcc
+      env: 
+      - COMPILER=g++
+      - USE_SYSTEM_LIBRARIES=OFF  
     - os: osx
       compiler: clang
-      env: COMPILER=clang
+      env: 
+      - COMPILER=clang++
+      - USE_SYSTEM_LIBRARIES=OFF
 
 # Build steps
 script:
   - mkdir build
   - cd build
-  - cmake -DCMAKE_CXX_COMPILER=$COMPILER .. && make
+  - cmake -DUSE_SYSTEM_LIBRARIES=$USE_SYSTEM_LIBRARIES -DCMAKE_CXX_COMPILER=$COMPILER .. && make
