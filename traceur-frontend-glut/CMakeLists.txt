@@ -31,7 +31,6 @@ endif()
 
 add_executable(traceur-frontend-glut 
 	src/main.cpp
-	src/mesh.cpp
 	src/raytracing.cpp
 	src/frontend/glut/visitor.cpp
 )
