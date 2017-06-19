@@ -19,7 +19,8 @@ matrix:
             - libglm-dev
       env:
       - COMPILER=g++-5
-      - USE_SYSTEM_LIBRARIES=ON
+      - USE_SYSTEM_GLM=OFF
+      - USE_SYSTEM_GLUT=ON
     - os: linux
       dist: trusty
       compiler: clang
@@ -36,20 +37,23 @@ matrix:
             - libglm-dev
       env: 
       - COMPILER=clang++-3.7
-      - USE_SYSTEM_LIBRARIES=ON
+      - USE_SYSTEM_GLM=OFF
+      - USE_SYSTEM_GLUT=ON
     - os: osx
       compiler: gcc
       env: 
       - COMPILER=g++
-      - USE_SYSTEM_LIBRARIES=OFF  
+      - USE_SYSTEM_GLM=OFF
+      - USE_SYSTEM_GLUT=ON  
     - os: osx
       compiler: clang
       env: 
       - COMPILER=clang++
-      - USE_SYSTEM_LIBRARIES=OFF
+      - USE_SYSTEM_GLM=OFF
+      - USE_SYSTEM_GLUT=ON
 
 # Build steps
 script:
   - mkdir build
   - cd build
-  - cmake -DUSE_SYSTEM_LIBRARIES=$USE_SYSTEM_LIBRARIES -DCMAKE_CXX_COMPILER=$COMPILER .. && make
+  - cmake -DUSE_SYSTEM_GLM=$USE_SYSTEM_GLM -DUSE_SYSTEM_GLUT=$USE_SYSTEM_GLUT -DCMAKE_CXX_COMPILER=$COMPILER .. && make
