@@ -45,7 +45,7 @@ add_library(traceur-core STATIC
 	include/traceur/core/scene/graph/factory.hpp
 	include/traceur/core/scene/graph/visitor.hpp
 	include/traceur/core/scene/primitive/primitive.hpp
-	include/traceur/core/scene/primitive/box.hpp
+	include/traceur/core/scene/primitive/sphere.hpp
 	include/traceur/core/scene/primitive/triangle.hpp
 	src/traceur/core/scene/graph/vector.cpp
 
