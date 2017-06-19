@@ -29,7 +29,13 @@ else()
 	add_library(GLUT::GLUT ALIAS freeglut_static)
 endif()
 
-add_executable(traceur-frontend-glut 
+add_executable(traceur-frontend-glut
+	include/traceur/frontend/glut/visitor.hpp
+	include/imageWriter.h
+	include/matrix.h
+	include/raytracing.h
+	include/traqueboule.h
+
 	src/main.cpp
 	src/raytracing.cpp
 	src/frontend/glut/visitor.cpp
