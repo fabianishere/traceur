@@ -52,6 +52,6 @@ void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Triangle &triangle)
 		glVertex3fv(glm::value_ptr(triangle.origin));
 		glVertex3fv(glm::value_ptr(triangle.origin + triangle.u));
 		glVertex3fv(glm::value_ptr(triangle.origin + triangle.v));
-    glEnd();
+	glEnd();
 }
 
