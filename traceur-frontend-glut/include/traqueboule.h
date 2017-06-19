@@ -24,10 +24,11 @@ Utilitaires pour appliquer une traqueboule a une fenetre OpenGL.
 #include <GL/glut.h>
 #endif
 
-#include <math.h>
+#include <stdio.h>
+
+#include <glm/glm.hpp>
 #include "matrix.h"
-#include "stdio.h"
-#include "Vec3D.h"
+
 static const float speedfact = 0.2;
 
 /** votre fonction d'affichage */
@@ -217,18 +218,14 @@ void tbProject( const GLdouble* p, GLdouble* q )
     project( tb_inverse, p, q );
     //cout<<"projRep: "<<q[0]<<", "<<q[1]<<", "<<q[2]<<", "<<q[3]<<endl;
 }
-Vec3Df getCameraPosition()
+glm::vec3 getCameraPosition()
 {
 	const GLdouble p[]={0,0,0,1};
 	GLdouble LightP[4];
 	tbProject(p, LightP);
-	Vec3Df LightPos;
-	LightPos[0]=LightP[0];
-	LightPos[1]=LightP[1];
-	LightPos[2]=LightP[2];
-	return LightPos;
+	return glm::vec3(LightP[0], LightP[1], LightP[2]);
 }
-Vec3Df getWorldPositionOfPixel(unsigned int px, unsigned int py)
+glm::vec3 getWorldPositionOfPixel(unsigned int px, unsigned int py)
 {
 
 	double mv[16];
@@ -241,8 +238,6 @@ Vec3Df getWorldPositionOfPixel(unsigned int px, unsigned int py)
 	double x,y,z;
 	gluUnProject(double(px),double(py),0,mv,pr,vp,&x,&y,&z);
 
-
-
-	return Vec3Df(x,y,z);
+	return glm::vec3(x,y,z);
 }
 #endif

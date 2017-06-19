@@ -11,41 +11,35 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#include <ctime>
+
+#include <glm/glm.hpp>
+#include <traceur/core/kernel/ray.hpp>
 
 #include "raytracing.h"
-#include "mesh.h"
 #include "traqueboule.h"
 #include "imageWriter.h"
 
 
-//This is the main application
-//Most of the code in here, does not need to be modified.
-//It is enough to take a look at the function "drawFrame",
-//in case you want to provide your own different drawing functions
+// This is the main application
+// Most of the code in here, does not need to be modified.
+// It is enough to take a look at the function "drawFrame",
+// in case you want to provide your own different drawing functions
+glm::vec3 MyCameraPosition;
 
+// MyLightPositions stores all the light positions to use
+// for the ray tracing. Please notice, the light that is 
+// used for the real-time rendering is NOT one of these, 
+// but following the camera instead.
+std::vector<glm::vec3> MyLightPositions;
 
-
-Vec3Df MyCameraPosition;
-
-//MyLightPositions stores all the light positions to use
-//for the ray tracing. Please notice, the light that is 
-//used for the real-time rendering is NOT one of these, 
-//but following the camera instead.
-std::vector<Vec3Df> MyLightPositions;
-
-//Main mesh 
-Mesh MyMesh; 
-
-unsigned int WindowSize_X = 800;  // resolution X
-unsigned int WindowSize_Y = 800;  // resolution Y
-
-
-
+constexpr unsigned int WindowSize_X = 800;  // resolution X
+constexpr unsigned int WindowSize_Y = 800;  // resolution Y
 
 /**
  * Main function, which is drawing an image (frame) on the screen
 */
-void drawFrame( )
+void drawFrame()
 {
 	yourDebugDraw();
 }
@@ -53,126 +47,115 @@ void drawFrame( )
 //animation is called for every image on the screen once
 void animate()
 {
-	MyCameraPosition=getCameraPosition();
+	MyCameraPosition = getCameraPosition();
 	glutPostRedisplay();
 }
 
-
-
+/* Forward declarations */
 void display(void);
 void reshape(int w, int h);
 void keyboard(unsigned char key, int x, int y);
 
 /**
- * Main Programme
+ * The main entry point of the program.
+ *
+ * @param[in] argc The number of command line arguments passed to this program.
+ * @param[in] argv The command line arguments passed to this program.
  */
 int main(int argc, char** argv)
 {
-    glutInit(&argc, argv);
+	glutInit(&argc, argv);
 
-    //framebuffer setup
-    glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
+	// Framebuffer setup
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 
-    // positioning and size of window
-    glutInitWindowPosition(200, 100);
-    glutInitWindowSize(WindowSize_X,WindowSize_Y);
-    glutCreateWindow(argv[0]);	
+	// Positioning and size of window
+	glutInitWindowPosition(200, 100);
+	glutInitWindowSize(WindowSize_X,WindowSize_Y);
+	glutCreateWindow(argv[0]);
 
-    //initialize viewpoint
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef(0,0,-4);
-    tbInitTransform();     // This is for the trackball, please ignore
-    tbHelp();             // idem
-	MyCameraPosition=getCameraPosition();
+	// Initialize viewpoint
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0, 0, -4);
+	tbInitTransform();     // This is for the trackball, please ignore
+	tbHelp();             // idem
+	MyCameraPosition = getCameraPosition();
 
-	//activate the light following the camera
-    glEnable( GL_LIGHTING );
-    glEnable( GL_LIGHT0 );
-    glEnable(GL_COLOR_MATERIAL);
-    int LightPos[4] = {0,0,2,0};
-    int MatSpec [4] = {1,1,1,1};
-    glLightiv(GL_LIGHT0,GL_POSITION,LightPos);
+	// Activate the light following the camera
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_COLOR_MATERIAL);
+	int LightPos[4] = {0, 0, 2, 0};
+	int MatSpec[4] = {1, 1, 1, 1};
+	glLightiv(GL_LIGHT0, GL_POSITION, LightPos);
 
-	//normals will be normalized in the graphics pipeline
+	// Normals will be normalized in the graphics pipeline
 	glEnable(GL_NORMALIZE);
-    //clear color of the background is black.
-	glClearColor (0.0, 0.0, 0.0, 0.0);
+	// Clear color of the background is black.
+	glClearColor(0.0, 0.0, 0.0, 0.0);
 
 	
 	// Activate rendering modes
-    //activate depth test
-	glEnable( GL_DEPTH_TEST ); 
-    //draw front-facing triangles filled
+	//activate depth test
+	glEnable(GL_DEPTH_TEST); 
+	//draw front-facing triangles filled
 	//and back-facing triangles as wires
-    glPolygonMode(GL_FRONT,GL_FILL);
-    glPolygonMode(GL_BACK,GL_LINE);
-    //interpolate vertex colors over the triangles
+	glPolygonMode(GL_FRONT,GL_FILL);
+	glPolygonMode(GL_BACK,GL_LINE);
+	//interpolate vertex colors over the triangles
 	glShadeModel(GL_SMOOTH);
 
 
 	// glut setup... to ignore
-    glutReshapeFunc(reshape);
-    glutKeyboardFunc(keyboard);
-    glutDisplayFunc(display);
-    glutMouseFunc(tbMouseFunc);    // trackball
-    glutMotionFunc(tbMotionFunc);  // uses mouse
-    glutIdleFunc( animate);
+	glutReshapeFunc(reshape);
+	glutKeyboardFunc(keyboard);
+	glutDisplayFunc(display);
+	glutMouseFunc(tbMouseFunc);    // trackball
+	glutMotionFunc(tbMotionFunc);  // uses mouse
+	glutIdleFunc(animate);
 
 
 	init();
 
-    
 	//main loop for glut... this just runs your application
-    glutMainLoop();
-        
-    return 0;  // execution never reaches this point
+	glutMainLoop();
+	return 0;
 }
-
-
-
-
-
-
-
-
-
-
 
 /**
  * OpenGL setup - functions do not need to be changed! 
  * you can SKIP AHEAD TO THE KEYBOARD FUNCTION
  */
-//what to do before drawing an image
- void display(void)
+void display(void)
 {
-	glPushAttrib(GL_ALL_ATTRIB_BITS);//store GL state
-    // Effacer tout
-    glClear( GL_COLOR_BUFFER_BIT  | GL_DEPTH_BUFFER_BIT); // clear image
-    
-    glLoadIdentity();  
-
-    tbVisuTransform(); // init trackball
-
-    drawFrame( );    //actually draw
-
-    glutSwapBuffers();//glut internal switch
-	glPopAttrib();//return to old GL state
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();
+	tbVisuTransform();
+	drawFrame();
+	glutSwapBuffers();
+	glPopAttrib();
 }
-//Window changes size
+
+/**
+ * Handle changes in window size.
+ */
 void reshape(int w, int h)
 {
-    glViewport(0, 0, (GLsizei) w, (GLsizei) h);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    //glOrtho (-1.1, 1.1, -1.1,1.1, -1000.0, 1000.0);
-    gluPerspective (50, (float)w/h, 0.01, 10);
-    glMatrixMode(GL_MODELVIEW);
+	glViewport(0, 0, (GLsizei) w, (GLsizei) h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	//glOrtho (-1.1, 1.1, -1.1,1.1, -1000.0, 1000.0);
+	gluPerspective (50, (float)w/h, 0.01, 10);
+	glMatrixMode(GL_MODELVIEW);
 }
 
-
-//transform the x, y position on the screen into the corresponding 3D world position
-void produceRay(int x_I, int y_I, Vec3Df * origin, Vec3Df * dest)
+/**
+ * Transform the x and y position on the screen into the corresponding 3D world 
+ * position.
+ */
+void produceRay(int x_I, int y_I, glm::vec3 &origin, glm::vec3 &destination)
 {
 		int viewport[4];
 		double modelview[16];
@@ -183,67 +166,54 @@ void produceRay(int x_I, int y_I, Vec3Df * origin, Vec3Df * dest)
 		int y_new = viewport[3] - y_I;
 
 		double x, y, z;
-		
 		gluUnProject(x_I, y_new, 0, modelview, projection, viewport, &x, &y, &z);
-		origin->p[0]=float(x);
-		origin->p[1]=float(y);
-		origin->p[2]=float(z);
+		origin = glm::vec3(x, y, z);
+		
 		gluUnProject(x_I, y_new, 1, modelview, projection, viewport, &x, &y, &z);
-		dest->p[0]=float(x);
-		dest->p[1]=float(y);
-		dest->p[2]=float(z);
+		destination = glm::vec3(x, y, z);
 }
 
-
-
-
-
-
-
-
-
-
-// react to keyboard input
+/**
+ * This method is invoked on keyboard input.
+ */
 void keyboard(unsigned char key, int x, int y)
 {
-    printf("key %d pressed at %d,%d\n",key,x,y);
+    printf("[main.cpp] key %d pressed at %d,%d\n", key, x, y);
     fflush(stdout);
-    switch (key)
-    {
-	//add/update a light based on the camera position.
+    switch (key) {
+	// Add/update a light based on the camera position.
 	case 'L':
 		MyLightPositions.push_back(getCameraPosition());
 		break;
 	case 'l':
-		MyLightPositions[MyLightPositions.size()-1]=getCameraPosition();
+		MyLightPositions[MyLightPositions.size() - 1] = getCameraPosition();
 		break;
 	case 'r':
 	{
-		//Pressing r will launch the raytracing.
-		cout<<"Raytracing"<<endl;
-				
+		// Pressing r will launch the raytracing.
+		printf("[main.cpp] tracing scene\n");
 
 		//Setup an image with the size of the current image.
-		Image result(WindowSize_X,WindowSize_Y);
+		Image result(WindowSize_X, WindowSize_Y);
 		
 		//produce the rays for each pixel, by first computing
 		//the rays for the corners of the frustum.
-		Vec3Df origin00, dest00;
-		Vec3Df origin01, dest01;
-		Vec3Df origin10, dest10;
-		Vec3Df origin11, dest11;
-		Vec3Df origin, dest;
+		glm::vec3 origin00, dest00;
+		glm::vec3 origin01, dest01;
+		glm::vec3 origin10, dest10;
+		glm::vec3 origin11, dest11;
+		glm::vec3 origin, dest;
 
 
-		produceRay(0,0, &origin00, &dest00);
-		produceRay(0,WindowSize_Y-1, &origin01, &dest01);
-		produceRay(WindowSize_X-1,0, &origin10, &dest10);
-		produceRay(WindowSize_X-1,WindowSize_Y-1, &origin11, &dest11);
+		produceRay(0,0, origin00, dest00);
+		produceRay(0,WindowSize_Y-1, origin01, dest01);
+		produceRay(WindowSize_X-1,0, origin10, dest10);
+		produceRay(WindowSize_X-1,WindowSize_Y-1, origin11, dest11);
 
-		
-		for (unsigned int y=0; y<WindowSize_Y;++y)
-			for (unsigned int x=0; x<WindowSize_X;++x)
-			{
+		clock_t begin = std::clock();
+
+		for (unsigned int y=0; y<WindowSize_Y;++y) {
+			for (unsigned int x=0; x<WindowSize_X;++x) {
 				//produce the rays for each pixel, by interpolating 
 				//the four rays of the frustum corners.
 				float xscale=1.0f-float(x)/(WindowSize_X-1);
@@ -255,22 +225,27 @@ void keyboard(unsigned char key, int x, int y)
 					(1-yscale)*(xscale*dest01+(1-xscale)*dest11);
 
 				//launch raytracing for the given ray.
-				Vec3Df rgb = performRayTracing(origin, dest);
+				glm::vec3 rgb = performRayTracing(origin, dest);
 				//store the result in an image 
 				result.setPixel(x,y, RGBValue(rgb[0], rgb[1], rgb[2]));
 			}
+		}
 
+
+		clock_t end = std::clock();
+		double secs = double(end - begin) / CLOCKS_PER_SEC;
+		printf("[main.cpp] traced scene in %f seconds\n", secs);
+		
 		result.writeImage("result.ppm");
 		break;
 	}
-	case 27:     // touche ESC
-        exit(0);
-    }
+	case 27:
+		exit(0);
+	}
 
-	
-	//produce the ray for the current mouse position
-	Vec3Df testRayOrigin, testRayDestination;
-	produceRay(x, y, &testRayOrigin, &testRayDestination);
+	// Produce the ray for the current mouse position
+	glm::vec3 testRayOrigin, testRayDestination;
+	produceRay(x, y, testRayOrigin, testRayDestination);
 
 	yourKeyboardFunc(key,x,y, testRayOrigin, testRayDestination);
 }

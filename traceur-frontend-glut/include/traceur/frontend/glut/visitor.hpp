@@ -21,46 +21,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef TRACEUR_CORE_SCENE_GRAPH_GRAPH_H
-#define TRACEUR_CORE_SCENE_GRAPH_GRAPH_H
+#ifndef TRACEUR_FRONTEND_GLUT_VISITOR_H
+#define TRACEUR_FRONTEND_GLUT_VISITOR_H
 
 #include <traceur/core/scene/graph/visitor.hpp>
-#include <traceur/core/kernel/ray.hpp>
-#include <traceur/core/kernel/hit.hpp>
+#include <traceur/core/scene/primitive/sphere.hpp>
+#include <traceur/core/scene/primitive/triangle.hpp>
 
 namespace traceur {
 	/**
-	 * An immutable (acceleration) data structure which arranges the logical
-	 * and often (but not necessarily) spatial representation of a graphical
-	 * scene.
+	 * A visitor of the {@link SceneGraph} that traverses the graph and draws
+	 * all elements of the scene into an OpenGL window.
 	 */
-	class SceneGraph {
+	class OpenGLSceneGraphVisitor: public SceneGraphVisitor {
 	public:
 		/**
-		 * Deconstruct the {@link SceneGraph} instance.
+		 * Construct a {@link OpenGLSceneGraphVisitor} instance.
 		 */
-		virtual ~SceneGraph() {}
+		OpenGLSceneGraphVisitor() {}
+	
+		/**
+		 * Visit a {@link Sphere} primitive in the scene graph.
+		 *
+		 * @param[in] node The node to visit.
+		 */
+		virtual void visit(const traceur::Sphere &) final;
 
 		/**
-		 * Determine whether the given ray intersects a shape in the geometry
-		 * of this graph.
+		 * Visit a {@link Triangle} primitive in the scene graph.
 		 *
-		 * @param[in] ray The ray to intersect with a shape.
-		 * @param[in] hit The intersection structure to which the details will
-		 * be written to.
-		 * @return <code>true</code> if a shape intersects the ray, otherwise
-		 * <code>false</code>.
+		 * @param[in] node The node to visit.
 		 */
-		inline virtual bool intersect(const traceur::Ray &, traceur::Hit &) const = 0;
-
-		/**
-		 * Accept a {@link SceneGraphVisitor} instance to traverse this scene 
-		 * graph.
-		 *
-		 * @param[in] visitor The visitor to accept.
-		 */
-		virtual void traverse(traceur::SceneGraphVisitor &) const = 0;
+		virtual void visit(const traceur::Triangle &) final;
 	};
 }
 
-#endif /* TRACEUR_CORE_SCENE_GRAPH_GRAPH_H */
+#endif /* TRACEUR_FRONTEND_GLUT_VISITOR_H */

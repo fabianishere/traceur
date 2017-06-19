@@ -21,42 +21,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#else
+#include <GL/glut.h>
+#endif
 
-#include <traceur/core/scene/graph/vector.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
-inline bool traceur::VectorSceneGraph::intersect(const traceur::Ray &ray, traceur::Hit &hit) const
+#include <traceur/frontend/glut/visitor.hpp>
+
+
+void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Sphere &sphere)
 {
-	traceur::Hit nearest;
-	double dist = std::numeric_limits<double>::infinity();
-	bool intersection = false;
-
-	for (auto &primitive : *nodes) {
-		if (primitive->intersect(ray, hit) && hit.distance < dist) {
-			nearest = hit;
-			dist = hit.distance;
-			intersection = true;
-		}
-	}
-
-	hit = nearest;
-	return intersection;
+	auto o = sphere.origin;
+	glPushMatrix();
+	glTranslatef(o[0], o[1], o[2]);
+	glutSolidSphere(sphere.radius, 5, 5);
+	glPopMatrix();
 }
 
-void traceur::VectorSceneGraph::traverse(traceur::SceneGraphVisitor &visitor) const
+void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Triangle &triangle)
 {
-	for (auto &primitive : *nodes) {
-		primitive->accept(visitor);
-	}
+	glBegin(GL_TRIANGLES);
+		glColor3fv(glm::value_ptr(triangle.material->diffuse));
+	
+		auto n = glm::normalize(glm::cross(triangle.u, triangle.v));
+		glNormal3fv(glm::value_ptr(n));
+		glVertex3fv(glm::value_ptr(triangle.origin));
+		glVertex3fv(glm::value_ptr(triangle.origin + triangle.u));
+		glVertex3fv(glm::value_ptr(triangle.origin + triangle.v));
+    glEnd();
 }
-
-void traceur::VectorSceneGraphBuilder::add(const std::shared_ptr<traceur::Primitive> primitive)
-{
-	nodes.push_back(primitive);
-}
-
-std::unique_ptr<traceur::SceneGraph> traceur::VectorSceneGraphBuilder::build() const
-{
-	return std::make_unique<traceur::VectorSceneGraph>(nodes);
-}
-
 

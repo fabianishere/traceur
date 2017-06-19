@@ -63,6 +63,14 @@ namespace traceur {
 		 * <code>false</code>.
 		 */
 		virtual bool intersect(const traceur::Ray &, traceur::Hit &) const final;
+
+		/**
+		 * Accept a {@link SceneGraphVisitor} instance to traverse this scene 
+		 * graph.
+		 *
+		 * @param[in] visitor The visitor to accept.
+		 */
+		virtual void traverse(traceur::SceneGraphVisitor &) const final;
 	};
 
 	/**
@@ -74,7 +82,6 @@ namespace traceur {
 		 */
 		std::vector<std::shared_ptr<traceur::Primitive>> nodes;
 	public:
-		virtual ~VectorSceneGraphBuilder() {}
 		/**
 		 * Add a node to the graph of the scene.
 		 *
