@@ -42,7 +42,7 @@ else()
 			target_link_libraries(gl INTERFACE "${OPENGL_gl_LIBRARY}")
 		endif()
 
-		target_compile_definitions(gl INTERFACE "${OPENGL_INCLUDE_DIR}")
+		target_include_directories(gl INTERFACE "${OPENGL_INCLUDE_DIR}")
 		add_library(OpenGL::GL ALIAS gl)
 	endif()
 	if (OPENGL_GLU_FOUND AND NOT TARGET OpenGL::GLU)
