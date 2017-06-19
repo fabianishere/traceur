@@ -60,13 +60,17 @@ namespace traceur {
 	std::unique_ptr<SceneGraphBuilderFactory> make_factory(Args&&... args)
 	{
 		class Factory: public SceneGraphBuilderFactory {
+			std::tuple<Args&&...> args;
+		public:
+			Factory(Args&&... args) : args(std::forward<Args>(args)...) {}
+
 			virtual std::unique_ptr<traceur::SceneGraphBuilder> create() const
 			{
 				return std::make_unique<T>(std::forward<Args>(args)...);
 			}
 		};
 
-		return std::make_unique<Factory>();
+		return std::make_unique<Factory>(std::forward<Args>(args)...);
 	}
 }
 
