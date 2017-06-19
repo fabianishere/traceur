@@ -13,7 +13,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
-            - cmake
+            - cmake3
             - libstdc++-4.8-dev
       env: COMPILER=g++-5
     - os: linux
@@ -26,7 +26,7 @@ matrix:
             - llvm-toolchain-precise-3.7
           packages:
             - clang-3.7
-            - cmake
+            - cmake3
             - libstdc++-4.8-dev
       env: COMPILER=clang++-3.7
     - os: osx
