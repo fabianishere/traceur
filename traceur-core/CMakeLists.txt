@@ -2,8 +2,11 @@ cmake_minimum_required(VERSION 3.5)
 
 set(CMAKE_CXX_STANDARD 14)
 
+# Use an existing GLM installation on the system
+option(USE_SYSTEM_GLM "Use an existing GLM installation on the system instead of the library bundled in this distribution." OFF)
+
 # Dependencies
-if (USE_SYSTEM_LIBRARIES)
+if (USE_SYSTEM_GLM)
 	find_library(GLM REQUIRED)
 	if (NOT GLM_FOUND)
 		message(FATAL_ERROR 

@@ -2,10 +2,18 @@ cmake_minimum_required(VERSION 3.5)
 
 set(CMAKE_CXX_STANDARD 14)
 
+# Use the system bundled GLUT framework on Apple
+if (APPLE)
+	option(USE_SYSTEM_GLUT "Use an existing GLUT installation on the system instead of the library bundled in this distribution." ON)
+endif()
+
 # Statically link the standard library when using MinGW.
 if (MINGW)
 	set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
 endif()
+
+# Use an existing GLUT installation on the system
+option(USE_SYSTEM_GLUT "Use an existing GLUT installation on the system instead of the library bundled in this distribution." OFF)
 
 # OpenGL dependency definition
 find_package(OpenGL REQUIRED)
@@ -34,7 +42,7 @@ else()
 			target_link_libraries(gl INTERFACE "${OPENGL_gl_LIBRARY}")
 		endif()
 
-		target_compile_definitions(gl INTERFACE "${OPENGL_INCLUDE_DIR}")
+		target_include_directories(gl INTERFACE "${OPENGL_INCLUDE_DIR}")
 		add_library(OpenGL::GL ALIAS gl)
 	endif()
 	if (OPENGL_GLU_FOUND AND NOT TARGET OpenGL::GLU)
@@ -57,7 +65,7 @@ else()
 endif()
 
 # FreeGLUT dependency definition
-if (USE_SYSTEM_LIBRARIES OR APPLE)
+if (USE_SYSTEM_GLUT)
 	find_package(GLUT REQUIRED)
 	if (NOT GLUT_FOUND)
 		message(FATAL_ERROR 
