@@ -21,34 +21,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef TRACEUR_EXPORTER_EXPORTER_H
-#define TRACEUR_EXPORTER_EXPORTER_H
 
-#include <string>
-#include <traceur/core/kernel/film.hpp>
+#include <traceur/exporter/ppm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
-namespace traceur {
-	/**
-	 * This interface is implemented by classes that are able to export the
-	 * result of a render in a specific file format.
-	 */
-	class Exporter {
-	public:
-		/**
-		 * Deconstruct the {@link Exporter} instance.
-		 */
-		virtual ~Exporter() {}
+void traceur::PPMExporter::write(const traceur::Film &film,
+								 const std::string &path) const
+{
+	auto file = fopen(path.c_str(), "w");
 
-		/**
-		 * Export the given film to the the file at the given path in the format
-		 * of the exporter implementation.
-		 *
-		 * @param[in] buffer The frame buffer to export to the given stream.
-		 * @param[in] path The path to the file to write the film to.
-		 */
-		virtual void write(const traceur::Film &,
-						   const std::string &) const = 0;
-	};
+	if (!file) {
+		/* TODO throw exception */
+		perror("error: failed to export file\n");
+		return;
+	}
+
+	static char rgb[3];
+
+	// Write file header
+	fprintf(file, "P6\n%lu %lu\n255\n", film.width, film.height);
+	// Write the pixels
+	for (int y = 0; y < film.height; y++) {
+		for (int x = 0; x < film.width; x++) {
+			auto pixel = film(x, y) * 255.0f;
+
+			rgb[0] = (unsigned char) pixel[0];
+			rgb[1] = (unsigned char) pixel[1];
+			rgb[2] = (unsigned char) pixel[2];
+			
+ 			fwrite(rgb, 3, 1, file);
+		}
+	}
+	// Close the file
+	fclose(file);
 }
-
-#endif /* TRACEUR_EXPORTER_EXPORTER_H */
