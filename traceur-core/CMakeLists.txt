@@ -51,6 +51,7 @@ add_library(traceur-core STATIC
 	include/traceur/core/scene/primitive/sphere.hpp
 	include/traceur/core/scene/primitive/triangle.hpp
 	src/traceur/core/scene/graph/vector.cpp
+	src/traceur/core/scene/camera.cpp
 
 	include/traceur/exporter/exporter.hpp
 	include/traceur/loader/loader.hpp
