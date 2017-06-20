@@ -24,8 +24,8 @@
     The loader-obj module provides a basic Wavefront 3d object scene loader, 
     with support for materials.
 
-  * export-ppm
-    The export-ppm module provides a simple exporter for the ppm file format.
+  * exporter-ppm
+    The exporter-ppm module provides a simple exporter for the ppm file format.
 
   * frontend-glut
     The frontend-glut module is the legacy GLUT frontend of the project based 
