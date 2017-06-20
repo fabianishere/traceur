@@ -101,3 +101,11 @@ add_executable(traceur-frontend-glut
 )
 target_include_directories(traceur-frontend-glut PRIVATE include/)
 target_link_libraries(traceur-frontend-glut traceur-loader-obj traceur-exporter-ppm GLUT::GLUT OpenGL::GLU)
+
+# Copy sample assets in build directory
+file(GLOB ASSETS "${CMAKE_SOURCE_DIR}/assets/*")
+add_custom_command(TARGET traceur-frontend-glut
+	POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/assets
+	COMMAND ${CMAKE_COMMAND} -E copy ${ASSETS} ${CMAKE_CURRENT_BINARY_DIR}/assets
+)

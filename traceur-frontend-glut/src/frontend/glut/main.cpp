@@ -69,7 +69,7 @@ void init()
 
 	auto factory = traceur::make_factory<traceur::VectorSceneGraphBuilder>();
 	auto loader = std::make_unique<traceur::ObjLoader>(std::move(factory));
-	scene = loader->load("cube.obj");
+	scene = loader->load("assets/cube.obj");
 
 	kernel = std::make_unique<traceur::BasicKernel>();
 	visitor = std::make_unique<traceur::OpenGLSceneGraphVisitor>();
