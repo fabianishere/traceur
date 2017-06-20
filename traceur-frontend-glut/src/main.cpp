@@ -14,7 +14,10 @@
 #include <ctime>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <traceur/core/kernel/ray.hpp>
+#include <traceur/core/scene/camera.hpp>
 
 #include "raytracing.h"
 #include "traqueboule.h"
@@ -195,42 +198,36 @@ void keyboard(unsigned char key, int x, int y)
 
 		//Setup an image with the size of the current image.
 		Image result(WindowSize_X, WindowSize_Y);
-		
-		//produce the rays for each pixel, by first computing
-		//the rays for the corners of the frustum.
-		glm::vec3 origin00, dest00;
-		glm::vec3 origin01, dest01;
-		glm::vec3 origin10, dest10;
-		glm::vec3 origin11, dest11;
-		glm::vec3 origin, dest;
 
+		// Get the viewport of the window
+		glm::ivec4 viewport;
+		glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
 
-		produceRay(0,0, origin00, dest00);
-		produceRay(0,WindowSize_Y-1, origin01, dest01);
-		produceRay(WindowSize_X-1,0, origin10, dest10);
-		produceRay(WindowSize_X-1,WindowSize_Y-1, origin11, dest11);
+		// Set up the camera
+		traceur::Camera camera = traceur::Camera(viewport)
+			.lookAt(getCameraPosition(), getCameraDirection(), getCameraUp())
+			.perspective(glm::radians(50.f), 1, 0.01, 10);
 
+		traceur::Ray ray;
+		glm::vec3 rgb;
+
+		// Time the ray tracing
 		clock_t begin = std::clock();
 
-		for (unsigned int y=0; y<WindowSize_Y;++y) {
-			for (unsigned int x=0; x<WindowSize_X;++x) {
-				//produce the rays for each pixel, by interpolating 
-				//the four rays of the frustum corners.
-				float xscale=1.0f-float(x)/(WindowSize_X-1);
-				float yscale=1.0f-float(y)/(WindowSize_Y-1);
+		for (unsigned int y = 0; y < WindowSize_Y; ++y) {
+			for (unsigned int x = 0; x < WindowSize_X; ++x) {
+				// Create a ray from the screen coordinates
+				ray = camera.rayFrom(glm::vec2(x, y));
 
-				origin=yscale*(xscale*origin00+(1-xscale)*origin10)+
-					(1-yscale)*(xscale*origin01+(1-xscale)*origin11);
-				dest=yscale*(xscale*dest00+(1-xscale)*dest10)+
-					(1-yscale)*(xscale*dest01+(1-xscale)*dest11);
+				// launch ray-tracing for the given ray.
+				rgb = performRayTracing(ray);
 
-				//launch raytracing for the given ray.
-				glm::vec3 rgb = performRayTracing(origin, dest);
-				//store the result in an image 
-				result.setPixel(x,y, RGBValue(rgb[0], rgb[1], rgb[2]));
+				// store the result in an image
+				result.setPixel(x, viewport[3] - y - 1, RGBValue(rgb[0],
+																 rgb[1],
+																 rgb[2]));
 			}
 		}
-
 
 		clock_t end = std::clock();
 		double secs = double(end - begin) / CLOCKS_PER_SEC;

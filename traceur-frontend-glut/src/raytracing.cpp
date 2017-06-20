@@ -53,11 +53,11 @@ void init()
 }
 
 // Return the color of your pixel.
-glm::vec3 performRayTracing(const glm::vec3 &origin, const glm::vec3 &dest)
+glm::vec3 performRayTracing(const traceur::Ray &ray)
 {
-	traceur::Ray ray(origin, dest - origin);
 	return kernel->trace(*scene, ray);
 }
+
 
 void yourDebugDraw()
 {

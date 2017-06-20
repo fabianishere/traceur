@@ -28,7 +28,7 @@ void produceRay(int x_I, int y_I, glm::vec3 &origin, glm::vec3 &dest);
 
 
 //your main function to rewrite
-glm::vec3 performRayTracing(const glm::vec3 &origin, const glm::vec3 &dest);
+glm::vec3 performRayTracing(const traceur::Ray &);
 
 //a function to debug --- you can draw in OpenGL here
 void yourDebugDraw();
