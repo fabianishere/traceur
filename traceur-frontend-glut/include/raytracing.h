@@ -4,6 +4,8 @@
 #include <memory>
 
 #include <glm/glm.hpp>
+#include <traceur/core/kernel/film.hpp>
+#include <traceur/core/scene/camera.hpp>
 #include <traceur/core/scene/scene.hpp>
 
 //Welcome to your MAIN PROJECT...
@@ -27,8 +29,8 @@ void init();
 void produceRay(int x_I, int y_I, glm::vec3 &origin, glm::vec3 &dest);
 
 
-//your main function to rewrite
-glm::vec3 performRayTracing(const traceur::Ray &);
+// Render the scene that has been loaded
+std::unique_ptr<traceur::Film> render(const traceur::Camera &);
 
 //a function to debug --- you can draw in OpenGL here
 void yourDebugDraw();

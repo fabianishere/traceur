@@ -13,7 +13,6 @@
 
 #include "raytracing.h"
 
-#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include <traceur/core/kernel/basic.hpp>
@@ -52,18 +51,14 @@ void init()
 	visitor = std::make_unique<traceur::OpenGLSceneGraphVisitor>();
 }
 
-// Return the color of your pixel.
-glm::vec3 performRayTracing(const traceur::Ray &ray)
+// Render the scene that has been loaded
+std::unique_ptr<traceur::Film> render(const traceur::Camera &camera)
 {
-	return kernel->trace(*scene, ray);
+	return kernel->render(*scene, camera);
 }
-
 
 void yourDebugDraw()
 {
-	//draw open gl debug stuff
-	//this function is called every frame
-	
 	// Draw the loaded scene graph
 	scene->graph->traverse(*visitor);
 

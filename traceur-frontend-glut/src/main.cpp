@@ -9,8 +9,6 @@
 #endif
 
 #include <stdlib.h>
-#include <math.h>
-#include <assert.h>
 #include <ctime>
 
 #include <glm/glm.hpp>
@@ -196,9 +194,6 @@ void keyboard(unsigned char key, int x, int y)
 		// Pressing r will launch the raytracing.
 		printf("[main.cpp] tracing scene\n");
 
-		//Setup an image with the size of the current image.
-		Image result(WindowSize_X, WindowSize_Y);
-
 		// Get the viewport of the window
 		glm::ivec4 viewport;
 		glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
@@ -208,32 +203,18 @@ void keyboard(unsigned char key, int x, int y)
 			.lookAt(getCameraPosition(), getCameraDirection(), getCameraUp())
 			.perspective(glm::radians(50.f), 1, 0.01, 10);
 
-		traceur::Ray ray;
-		glm::vec3 rgb;
 
 		// Time the ray tracing
 		clock_t begin = std::clock();
 
-		for (unsigned int y = 0; y < WindowSize_Y; ++y) {
-			for (unsigned int x = 0; x < WindowSize_X; ++x) {
-				// Create a ray from the screen coordinates
-				ray = camera.rayFrom(glm::vec2(x, y));
+		// Render the scene and capture the result
+		auto result = render(camera);
 
-				// launch ray-tracing for the given ray.
-				rgb = performRayTracing(ray);
-
-				// store the result in an image
-				result.setPixel(x, viewport[3] - y - 1, RGBValue(rgb[0],
-																 rgb[1],
-																 rgb[2]));
-			}
-		}
-
+		// Calculate the elapsed time
 		clock_t end = std::clock();
 		double secs = double(end - begin) / CLOCKS_PER_SEC;
 		printf("[main.cpp] traced scene in %f seconds\n", secs);
-		
-		result.writeImage("result.ppm");
+
 		break;
 	}
 	case 27:
