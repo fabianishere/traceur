@@ -26,6 +26,14 @@
 #include <filesystem/path.h>
 #include <iostream>
 
+/* Use shim for getopt on Windows */
+#ifdef _WIN32
+#include <getopt.h>
+#else
+#include <unistd.h>
+#endif
+
+
 #include <glm/glm.hpp>
 
 #include <traceur/core/kernel/basic.hpp>
