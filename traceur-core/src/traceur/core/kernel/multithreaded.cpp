@@ -22,6 +22,10 @@
  * THE SOFTWARE.
  */
 
+#ifdef USE_THREADING
+#include <future>
+#endif
+
 #include <traceur/core/kernel/multithreaded.hpp>
 
 traceur::MultithreadedKernel::MultithreadedKernel(const std::shared_ptr<traceur::Kernel> kernel, int N) :
@@ -36,9 +40,13 @@ std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(
 			camera.viewport[3],
 			N
 	);
+
+#ifdef USE_THREADING
 	auto tasks = std::vector<std::future<void>>(film->n);
+#endif
 
 	/* Initialise threads */
+	/* TODO Use N threads */
 	for (int i = 0; i < film->n; i++) {
 		auto &partition = (*film)(i);
 		auto offset = glm::ivec2(
@@ -46,15 +54,21 @@ std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(
 				(i / film->columns) * partition.height
 		);
 
+#ifdef USE_THREADING
 		tasks[i] = std::async(std::launch::async, [this, &scene, offset, &partition, &camera] {
 			this->kernel->render(scene, camera, partition, offset);
 		});
+#else
+		kernel->render(scene, camera, partition, offset);
+#endif
 	}
 
+#ifdef USE_THREADING
 	/* Wait for all tasks */
 	for (auto &task : tasks) {
 		task.wait();
 	}
+#endif
 
 	return std::move(film);
 }

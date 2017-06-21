@@ -2,16 +2,23 @@ cmake_minimum_required(VERSION 3.5)
 
 set(CMAKE_CXX_STANDARD 14)
 
-# Use an existing GLM installation on the system
-option(USE_SYSTEM_GLM "Use an existing GLM installation on the system instead of the library bundled in this distribution." OFF)
+# Option to use threading
+option(USE_THREADING "Add support for multi-threading ray-tracing kernels" ON)
 
 # Threading
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-if (NOT TARGET Threads::Threads)
-	add_library(Threads::Threads INTERFACE IMPORTED)
-	set_target_properties(Threads::Threads PROPERTIES
-		INTERFACE_LINK_LIBRARIES "${CMAKE_THREAD_LIBS_INIT}")
+if (NOT THREADS_FOUND)
+	# Check if thread library has been found.
+	message(STATUS "Threading library not found. Disabling multi-threading ray-tracing kernels.")
+	option(USE_THREADING "Add support for multi-threading ray-tracing kernels" OFF)
+elseif(MINGW)
+	# MinGW does not support std::async
+	option(USE_THREADING "Add support for multi-threading ray-tracing kernels" OFF)
 endif()
+
+# Use an existing GLM installation on the system
+option(USE_SYSTEM_GLM "Use an existing GLM installation on the system instead of the library bundled in this distribution." OFF)
 
 # GLM
 if (USE_SYSTEM_GLM)
@@ -68,3 +75,9 @@ add_library(traceur-core STATIC
 )
 target_include_directories(traceur-core PUBLIC include/)
 target_link_libraries(traceur-core GLM::GLM)
+
+if (USE_THREADING)
+	message(STATUS "Using multi-threading ray-tracing kernels")
+	target_compile_definitions(traceur-core PUBLIC -DUSE_THREADING=1)
+	target_link_libraries(traceur-core Threads::Threads)
+endif()

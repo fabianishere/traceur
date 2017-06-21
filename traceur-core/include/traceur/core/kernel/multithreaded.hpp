@@ -24,7 +24,6 @@
 #ifndef TRACEUR_CORE_KERNEL_MULTITHREADED_H
 #define TRACEUR_CORE_KERNEL_MULTITHREADED_H
 
-#include <future>
 #include <memory>
 
 #include <traceur/core/kernel/kernel.hpp>
@@ -87,9 +86,13 @@ namespace traceur {
 		 */
 		virtual const std::string & name() const final
 		{
+#ifdef USE_THREADING
 			static const std::string name = kernel->name() + "-multithreaded-"
 											+ std::to_string(N);
 			return name;
+#else
+			return kernel->name();
+#endif
 		}
 	};
 }
