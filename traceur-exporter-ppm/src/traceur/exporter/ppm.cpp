@@ -43,7 +43,8 @@ void traceur::PPMExporter::write(const traceur::Film &film,
 	// Write the pixels
 	for (int y = 0; y < film.height; y++) {
 		for (int x = 0; x < film.width; x++) {
-			auto pixel = film(x, y) * 255.0f;
+			/* film origin is bottom-left, while ppm is top-left */
+			auto pixel = film(x, film.height - y - 1) * 255.0f;
 
 			rgb[0] = (unsigned char) pixel[0];
 			rgb[1] = (unsigned char) pixel[1];

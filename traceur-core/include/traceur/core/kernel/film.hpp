@@ -164,8 +164,6 @@ namespace traceur {
 		 */
 		PartitionedFilm(size_t width, size_t height, size_t columns, Args&&... args) : Film(width, height), columns(columns), n(columns * columns)
 		{
-			partitions.reserve(n);
-
 			px = width / columns;
 			py = height / columns;
 			size_t rx = width % columns;
@@ -176,7 +174,8 @@ namespace traceur {
 				partitions.push_back(T(px, py, std::forward<Args>(args)...));
 			}
 
-			if (n > 1) {
+			/* Add the last partition with the remainders */
+			if (n > 0) {
 				partitions.push_back(T(px + rx, py + ry, std::forward<Args>(args)...));
 			}
 		}
