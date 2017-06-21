@@ -24,6 +24,7 @@
 #ifndef TRACEUR_CORE_KERNEL_KERNEL_H
 #define TRACEUR_CORE_KERNEL_KERNEL_H
 
+#include <string>
 #include <memory>
 
 #include <traceur/core/kernel/film.hpp>
@@ -66,6 +67,13 @@ namespace traceur {
 							const traceur::Camera &,
 							traceur::Film &,
 							const glm::ivec2 &) const = 0;
+
+		/**
+		 * Return the name of this kernel.
+		 *
+		 * @return A string representing the name of this kernel.
+		 */
+		virtual const std::string & name() const = 0;
 	};
 }
 

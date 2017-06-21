@@ -41,18 +41,7 @@ std::unique_ptr<traceur::Film> traceur::BasicKernel::render(const traceur::Scene
 {
 	auto film = std::make_unique<traceur::DirectFilm>(camera.viewport[2],
 													  camera.viewport[3]);
-
-	traceur::Ray ray;
-	traceur::Pixel pixel;
-
-	for (int y = 0; y < film->height; y++) {
-		for (int x = 0; x < film->width; x++) {
-			ray = camera.rayFrom(glm::vec2(x, y));
-			pixel = trace(scene, ray);
-			(*film)(x, film->height - y - 1) = pixel;
-		}
-	}
-
+	render(scene, camera, *film, glm::ivec2());
 	return std::move(film);
 }
 
@@ -64,11 +53,11 @@ void traceur::BasicKernel::render(const traceur::Scene &scene,
 	traceur::Ray ray;
 	traceur::Pixel pixel;
 
-	for (int y = offset[1]; y < film.height; y++) {
-		for (int x = offset[0]; x < film.width; x++) {
-			ray = camera.rayFrom(glm::vec2(x, y));
+	for (int y = 0; y < film.height; y++) {
+		for (int x = 0; x < film.width; x++) {
+			ray = camera.rayFrom(glm::vec2(x + offset[0], y + offset[1]));
 			pixel = trace(scene, ray);
-			film(x, film.height - y - 1) = pixel;
+			film(x, y) = pixel;
 		}
 	}
 }

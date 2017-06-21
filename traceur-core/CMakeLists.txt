@@ -2,10 +2,25 @@ cmake_minimum_required(VERSION 3.5)
 
 set(CMAKE_CXX_STANDARD 14)
 
+# Option to use threading
+option(USE_THREADING "Add support for multi-threading ray-tracing kernels" ON)
+
+# Threading
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+if (NOT THREADS_FOUND)
+	# Check if thread library has been found.
+	message(STATUS "Threading library not found. Disabling multi-threading ray-tracing kernels.")
+	option(USE_THREADING "Add support for multi-threading ray-tracing kernels" OFF)
+elseif(MINGW)
+	# MinGW does not support std::async
+	option(USE_THREADING "Add support for multi-threading ray-tracing kernels" OFF)
+endif()
+
 # Use an existing GLM installation on the system
 option(USE_SYSTEM_GLM "Use an existing GLM installation on the system instead of the library bundled in this distribution." OFF)
 
-# Dependencies
+# GLM
 if (USE_SYSTEM_GLM)
 	find_library(GLM REQUIRED)
 	if (NOT GLM_FOUND)
@@ -37,7 +52,9 @@ add_library(traceur-core STATIC
 	include/traceur/core/kernel/hit.hpp
 	include/traceur/core/kernel/ray.hpp
 	include/traceur/core/kernel/basic.hpp
+	include/traceur/core/kernel/multithreaded.hpp
 	src/traceur/core/kernel/basic.cpp
+	src/traceur/core/kernel/multithreaded.cpp
 
 	include/traceur/core/lightning/light.hpp
 	include/traceur/core/material/material.hpp
@@ -58,3 +75,9 @@ add_library(traceur-core STATIC
 )
 target_include_directories(traceur-core PUBLIC include/)
 target_link_libraries(traceur-core GLM::GLM)
+
+if (USE_THREADING)
+	message(STATUS "Using multi-threading ray-tracing kernels")
+	target_compile_definitions(traceur-core PUBLIC -DUSE_THREADING=1)
+	target_link_libraries(traceur-core Threads::Threads)
+endif()
