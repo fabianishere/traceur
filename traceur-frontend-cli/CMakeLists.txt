@@ -2,9 +2,11 @@ cmake_minimum_required(VERSION 3.5)
 
 set(CMAKE_CXX_STANDARD 14)
 
-# getopt shim
+# getopt shim for windows
 add_library(getopt INTERFACE)
-target_include_directories(getopt INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/deps/getopt)
+if (MSVC)
+	target_include_directories(getopt INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/deps/getopt)
+endif()
 
 # The module definition
 add_executable(traceur-frontend-cli

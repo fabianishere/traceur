@@ -23,16 +23,10 @@
  */
 #include <ctime>
 #include <memory>
-#include <filesystem/path.h>
 #include <iostream>
 
-/* Use shim for getopt on Windows */
-#ifdef _WIN32
 #include <getopt.h>
-#else
-#include <unistd.h>
-#endif
-
+#include <filesystem/path.h>
 
 #include <glm/glm.hpp>
 

@@ -61,7 +61,7 @@
 #define __GETOPT_H__
 
 /* All the headers include this file. */
-#ifndef __MINGW32__
+#ifdef _MSC_VER
 #include <crtdefs.h>
 #endif
 #include <errno.h>
