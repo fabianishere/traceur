@@ -79,8 +79,8 @@ namespace traceur {
 			auto u = (min - ray.origin) * inverse;
 			auto v = (max - ray.origin) * inverse;
 
-			float tmin = std::max(std::max(std::min(u[0], v[0]), std::min(u[1], v[1])), std::min(u[2], v[2]));
-			float tmax = std::min(std::min(std::max(u[0], v[0]), std::max(u[1], v[1])), std::max(u[2], v[2]));
+			float tmin = std::fmax(std::fmax(std::fmin(u[0], v[0]), std::fmin(u[1], v[1])), std::fmin(u[2], v[2]));
+			float tmax = std::fmin(std::fmin(std::fmax(u[0], v[0]), std::fmax(u[1], v[1])), std::fmax(u[2], v[2]));
 
 			if (tmax < 0)
 				return false;
