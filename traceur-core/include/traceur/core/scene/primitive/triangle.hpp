@@ -25,24 +25,29 @@
 #define TRACEUR_CORE_SCENE_PRIMITIVE_TRIANGLE_H
 
 #include <traceur/core/scene/primitive/primitive.hpp>
+#include <traceur/core/scene/primitive/box.hpp>
 
 namespace traceur {
 	/**
 	 * A geometric primitive that represents a triangle shape.
 	 */
 	class Triangle: public Primitive {
+		/**
+		 * The bounding box of this triangle.
+		 */
+		traceur::Box box;
 	public:
 		/**
 		 * The vector to the second vertex of the triangle from the origin of
 		 * this triangle.
 		 */
-		const glm::vec3 u;
+		glm::vec3 u;
 
 		/**
 		 * The vector tot the third vertex of the triangle from the origin of
 		 * this triangle.
 		 */
-		const glm::vec3 v;
+		glm::vec3 v;
 
 		/**
 		 * Construct a {@link Triangle} instance.
@@ -53,7 +58,10 @@ namespace traceur {
 		 * @param[in] material The material of the triangle.
 		 */
 		Triangle(const glm::vec3 origin, const glm::vec3 &u, const glm::vec3 &v, const std::shared_ptr<traceur::Material> material) :
-			Primitive(origin, material), u(u), v(v) {}
+			Primitive(origin, material), u(u), v(v), box(Box(material))
+		{
+			box = calculate_bounding_box();
+		}
 
 		/**
 		 * Determine whether the given ray intersects the shape.
@@ -119,6 +127,39 @@ namespace traceur {
 		inline virtual void accept(traceur::SceneGraphVisitor &visitor) const final
 		{
 			visitor.visit(*this);
+		}
+
+		/**
+		 * Return the bounding {@link Box} which encapsulates the whole
+		 * primitive.
+		 *
+		 * @return The bounding {@link Box} instance.
+		 */
+		virtual const Box & bounding_box() const final
+		{
+			return box;
+		}
+	private:
+		/**
+		 * Calculate the bounding box of this primitive.
+		 *
+		 * @param[in] The material of the bounding box.
+		 * @return The bounding {@link Box} of this primitive.
+		 */
+		Box calculate_bounding_box() const
+		{
+			float infinity = std::numeric_limits<float>::infinity();
+			glm::vec3 min(infinity), max(-infinity);
+
+			for (auto &vertex : {origin, origin + u, origin + v}) {
+				for (int i = 0; i < 3; i++) {
+					if (vertex[i] < min[i])
+						min[i] = vertex[i];
+					if (vertex[i] > max[i])
+						max[i] = vertex[i];
+				}
+			}
+			return traceur::Box(min, max, material);
 		}
 	};
 }

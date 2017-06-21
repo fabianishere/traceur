@@ -25,17 +25,22 @@
 #define TRACEUR_CORE_SCENE_PRIMITIVE_SPHERE_H
 
 #include <traceur/core/scene/primitive/primitive.hpp>
+#include <traceur/core/scene/primitive/box.hpp>
 
 namespace traceur {
 	/**
 	 * A spherical primitive which has a center and a radius.
 	 */
 	class Sphere: public Primitive {
+		/**
+		 * The bounding box of this sphere.
+		 */
+		traceur::Box box;
 	public:
 		/**
 		 * The radius of the sphere.
 		 */
-		const double radius;
+		double radius;
 
 		/**
 		 * Construct a {@link Sphere} instance.
@@ -45,7 +50,8 @@ namespace traceur {
 		 * @param[in] material The material of the sphere.
 		 */
 		Sphere(const glm::vec3 &center, double radius, const std::shared_ptr<traceur::Material> &material) :
-			Primitive(center, material), radius(radius) {}
+			Primitive(center, material), radius(radius),
+			box(traceur::Box(center + glm::vec3(radius), center - glm::vec3(radius), material)) {}
 
 		/**
 		 * Determine whether the given ray intersects the shape.
@@ -90,6 +96,17 @@ namespace traceur {
 		inline virtual void accept(traceur::SceneGraphVisitor &visitor) const final
 		{
 			visitor.visit(*this);
+		}
+
+		/**
+		 * Return the bounding {@link Box} which encapsulates the whole
+		 * primitive.
+		 *
+		 * @return The bounding {@link Box} instance.
+		 */
+		virtual const traceur::Box & bounding_box() const final
+		{
+			return box;
 		}
 	};
 }
