@@ -23,39 +23,41 @@
  */
 
 #include <memory>
-#include <string.h>
 #include <errno.h>
+#include <filesystem/path.h>
 
 #include <glm/glm.hpp>
 
 #include <traceur/loader/obj.hpp>
 #include <traceur/core/scene/primitive/triangle.hpp>
-#include <traceur/core/material/material.hpp>
 #include <traceur/core/scene/graph/vector.hpp>
 
 // XXX Assume line has maximum lenght of 256 bytes (hack)
 constexpr unsigned int LINE_LEN = 256;
 
-std::unique_ptr<traceur::Scene> traceur::ObjLoader::load(const std::string &path) const
+std::unique_ptr<traceur::Scene> traceur::ObjLoader::load(const std::string
+														 &file) const
 {
 	auto builder = factory->create();
-	
+	auto path = filesystem::path(file);
+
 	std::shared_ptr<traceur::Material> defaultMat = std::make_shared<traceur::Material>(
-			glm::vec3(0.f, 0.f, 0.f),	/* Ambient */
+			glm::vec3(0.f, 0.f, 0.f),   /* Ambient */
 			glm::vec3(0.5f, 0.5f, 0.5f),/* Diffuse */
 			glm::vec3(0.5f, 0.5f, 0.5f),/* Specular */
-			96.7f						/* Shininess */
+			96.7f                       /* Shininess */
 	);
 
-	std::map<std::string, std::shared_ptr<traceur::Material>> materials;
+	std::map<std::string, std::shared_ptr<traceur::Material>> materials {
+			{"$default$", defaultMat}
+	};
 	float x, y, z;
 
 	std::vector<glm::vec3> vertices;
 	std::string matname;
-	std::string path_ = "";
 
 	char s[LINE_LEN] = {0};
-	FILE *in = fopen(path.c_str(), "r");
+	FILE *in = fopen(file.c_str(), "r");
 
 	std::vector<int> vhandles;
 	std::vector<int> texhandles;
@@ -68,7 +70,6 @@ std::unique_ptr<traceur::Scene> traceur::ObjLoader::load(const std::string &path
 
 		// material file
 		else if (strncmp(s, "mtllib ", 7) == 0) {
-			char mtlfile[128];
 			char *p0 = s+6, *p1;
 			while( isspace(*++p0) ); p1=p0;
 			std::string t = p1;
@@ -78,12 +79,8 @@ std::unique_ptr<traceur::Scene> traceur::ObjLoader::load(const std::string &path
 					break; 
 				}
 			}
-			std::string file;
-			if (t.length() == i)
-				file = path_.append(t);
-			else
-				file = path_.append(t.substr(0, i));
-			loadMaterials(file, materials);
+			auto matPath = filesystem::path(t.length() == i ? t : t.substr(0, i));
+			loadMaterials((path.parent_path()/matPath).str(), materials);
 		}
 		// usemtl
 		else if (strncmp(s, "usemtl ", 7) == 0) {
@@ -94,7 +91,7 @@ std::unique_ptr<traceur::Scene> traceur::ObjLoader::load(const std::string &path
 			if (!materials.count(matname))
 			{
 				fprintf(stdout, "warning: material '%s' not defined in material file. Taking default!\n", matname.c_str());
-				matname = "";
+				matname = "$default$";
 			}
 		}
 		// vertex
