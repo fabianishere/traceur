@@ -26,35 +26,84 @@
 
 #include <glm/glm.hpp>
 
+#include <traceur/core/kernel/ray.hpp>
+
 namespace traceur {
 	/**
 	 * This class represents a camera that captures a {@link Scene}.
 	 */
 	class Camera {
+		/**
+		 * The model matrix of the camera.
+		 */
+		glm::mat4x4 model;
+
+		/**
+		 * The projection matrix of the camera.
+		 */
+		glm::mat4x4 projection;
 	public:
 		/**
-		 * The position of the camera within the scene.
+		 * The viewport of the camera.
 		 */
-		const glm::vec3 position;
-
-		/**
-		 * The normalised direction of the camera within the scene.
-		 */
-		const glm::vec3 direction;
-
-		/**
-		 * Construct a {@link Camera} instance.
-		 */
-		Camera() : direction(glm::vec3(1, 0, 0)) {}
+		const glm::ivec4 viewport;
 
 		/**
 		 * Construct a {@link Camera} instance.
 		 *
-		 * @param[in] position The position of the camera.
-		 * @param[in] direction The normalised direction of the camera.
+		 * @param[in] viewport The viewport of the camera.
 		 */
-		Camera(const glm::vec3 &position, const glm::vec3 &direction)
-			: position(position), direction(direction) {}
+		Camera(const glm::ivec4 &viewport) : viewport(viewport) {}
+
+		/**
+		 * Create a {@link Ray} instance for the given window coordinates
+		 * (x, y, z).
+		 *
+		 * @param[in] win The window coordinates to create a ray for.
+		 */
+		traceur::Ray rayFrom(const glm::vec2 &) const;
+
+		/**
+		 * Look into the given direction from the given position.
+		 *
+		 * @param[in] position The position of the camera.
+		 * @param[in] direction The direction of the camera.
+		 * @param[in] up The up vector of the camera.
+		 */
+		traceur::Camera lookAt(const glm::vec3 &, const glm::vec3 &,
+							   const glm::vec3 &) const;
+
+		/**
+		 * Create a camera from this camera using perspective projection.
+		 *
+		 * @param[in] fov The field of view of the camera.
+		 * @param[in] aspect The aspect ratio of the camera.
+		 * @param[in] near The z-coordinate of the near clipping plane of the
+		 * camera.
+		 * @param[in] far The z-coordinate of the far clipping plane of the
+		 * camera.
+		 */
+		traceur::Camera perspective(float fov, float aspect,
+									float near, float far) const;
+
+		/**
+		 * Create a camera from this camera using orthographic projection.
+ 		 *
+ 		 * @param[in] left The coordinate for the left vertical clipping plane.
+ 		 * @param[in] right The coordinate for the right vertical clipping
+ 		 * plane.
+ 		 * @param[in] bottom The coordinate for the bottom horizontal
+ 		 * clipping plane.
+ 		 * @param[in] top The coordinate for the top horizontal
+ 		 * clipping plane.
+ 		 * @param[in] near The z-coordinate of the near clipping plane of the
+ 		 * camera.
+ 		 * @param[in] far The z-coordinate of the far clipping plane of the
+ 		 * camera.
+ 		 */
+		traceur::Camera orthographic(float left, float right,
+									 float bottom, float top,
+									 float near, float far) const;
 	};
 }
 

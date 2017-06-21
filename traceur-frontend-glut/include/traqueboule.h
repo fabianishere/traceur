@@ -225,19 +225,14 @@ glm::vec3 getCameraPosition()
 	tbProject(p, LightP);
 	return glm::vec3(LightP[0], LightP[1], LightP[2]);
 }
-glm::vec3 getWorldPositionOfPixel(unsigned int px, unsigned int py)
+
+glm::vec3 getCameraDirection()
 {
+    return glm::vec3(-tb_matrix[2], -tb_matrix[6], -tb_matrix[10]);
+}
 
-	double mv[16];
-	double pr[16];
-	int vp[4];
-	glGetDoublev(GL_MODELVIEW_MATRIX,mv);
-	glGetDoublev(GL_PROJECTION_MATRIX,pr);
-	glGetIntegerv(GL_VIEWPORT,vp);
-
-	double x,y,z;
-	gluUnProject(double(px),double(py),0,mv,pr,vp,&x,&y,&z);
-
-	return glm::vec3(x,y,z);
+glm::vec3 getCameraUp()
+{
+    return glm::vec3(tb_matrix[1], tb_matrix[5], tb_matrix[9]);
 }
 #endif

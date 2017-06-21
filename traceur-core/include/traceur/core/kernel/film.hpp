@@ -66,7 +66,7 @@ namespace traceur {
 		 * @param[in] y The y coordinate in the film.
 		 * @return A reference to the {@link Pixel}.
 		 */
-		inline virtual traceur::Pixel & operator()(size_t, size_t) = 0;
+		inline virtual traceur::Pixel & operator()(int, int) = 0;
 
 		/**
 		 * Return the pixel value to a {@link Pixel} in this film.
@@ -75,7 +75,7 @@ namespace traceur {
 		 * @param[in] y The y coordinate in the film.
 		 * @return The pixel value.
 		 */
-		inline virtual traceur::Pixel operator()(size_t, size_t ) const = 0;
+		inline virtual traceur::Pixel operator()(int, int) const = 0;
 	};
 
 	/**
@@ -104,7 +104,7 @@ namespace traceur {
 		 * @param[in] y The y coordinate in the film.
 		 * @return A reference to the {@link Pixel}.
 		 */
-		inline virtual traceur::Pixel & operator()(size_t x, size_t y) final
+		inline virtual traceur::Pixel & operator()(int x, int y) final
 		{
 			return buffer[y * width + x];
 		}
@@ -116,7 +116,7 @@ namespace traceur {
 		 * @param[in] y The y coordinate in the film.
 		 * @return The pixel value.
 		 */
-		inline virtual traceur::Pixel operator()(size_t x, size_t y) const final
+		inline virtual traceur::Pixel operator()(int x, int y) const final
 		{
 			return buffer[y * width + x];
 		}
@@ -187,7 +187,7 @@ namespace traceur {
 		 * @param[in] n The number of partition to get.
 		 * @return The partition to get.
 		 */
-		inline T & operator()(size_t n)
+		inline T & operator()(int n)
 		{
 			return partitions[n];
 		}
@@ -200,7 +200,7 @@ namespace traceur {
 		 * @param[in] y The y coordinate in the film.
 		 * @return A reference to the {@link Pixel}.
 		 */
-		inline virtual traceur::Pixel & operator()(size_t x, size_t y) final
+		inline virtual traceur::Pixel & operator()(int x, int y) final
 		{
 			size_t j = x / px;
 			size_t i = y / py;
@@ -217,7 +217,7 @@ namespace traceur {
 		 * @param[in] y The y coordinate in the film.
 		 * @return The pixel value.
 		 */
-		inline virtual traceur::Pixel operator()(size_t x, size_t y) const final
+		inline virtual traceur::Pixel operator()(int x, int y) const final
 		{
 			size_t j = x / px;
 			size_t i = y / py;

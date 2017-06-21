@@ -50,8 +50,8 @@ namespace traceur {
 		 * @param[in] camera The {@link Camera} to use.
 		 * @return A {@link Film} of the scene to take ownership over.
 		 */
-		virtual std::unique_ptr<traceur::Film> render(const traceur::Scene &, 
-				const traceur::Camera &) const = 0;
+		virtual std::unique_ptr<traceur::Film> render(const traceur::Scene &,
+													  const traceur::Camera &) const = 0;
 
 		/**
 		 * Render a part of the given {@link Scene} into the {@link Film}
@@ -60,10 +60,12 @@ namespace traceur {
 		 * @param[in] scene The {@link Scene} to render.
 		 * @param[in] camera The {@link Camera} to use.
 		 * @param[in] film The film to render the scene into.
-		 * @param[in] offset The offset of the sceen.
+		 * @param[in] offset The offset of the screen.
 		 */
-		virtual void render(const traceur::Scene &, const traceur::Camera &, 
-				traceur::Film &, glm::vec2 &) const = 0;
+		virtual void render(const traceur::Scene &,
+							const traceur::Camera &,
+							traceur::Film &,
+							const glm::ivec2 &) const = 0;
 	};
 }
 

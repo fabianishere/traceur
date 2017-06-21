@@ -36,12 +36,17 @@ namespace traceur {
 		/**
 		 * The origin of the ray.
 		 */
-		const glm::vec3 origin;
+		glm::vec3 origin;
 
 		/**
 		 * The direction of the ray.
 		 */
-		const glm::vec3 direction;
+		glm::vec3 direction;
+
+		/**
+		 * Construct a {@link Ray} instance.
+		 */
+		Ray() {}
 
 		/**
 		 * Construct a {@link Ray} instance.

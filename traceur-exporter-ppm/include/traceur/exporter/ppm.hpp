@@ -21,24 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef TRACEUR_EXPORTER_EXPORTER_H
-#define TRACEUR_EXPORTER_EXPORTER_H
+#ifndef TRACEUR_EXPORTER_PPM_H
+#define TRACEUR_EXPORTER_PPM_H
 
-#include <string>
-#include <traceur/core/kernel/film.hpp>
+#include <traceur/exporter/exporter.hpp>
 
 namespace traceur {
 	/**
-	 * This interface is implemented by classes that are able to export the
-	 * result of a render in a specific file format.
+	 * A {@link Exporter} that exports the film in a .ppm file format.
 	 */
-	class Exporter {
+	class PPMExporter : public Exporter {
 	public:
-		/**
-		 * Deconstruct the {@link Exporter} instance.
-		 */
-		virtual ~Exporter() {}
-
 		/**
 		 * Export the given film to the the file at the given path in the format
 		 * of the exporter implementation.
@@ -47,8 +40,8 @@ namespace traceur {
 		 * @param[in] path The path to the file to write the film to.
 		 */
 		virtual void write(const traceur::Film &,
-						   const std::string &) const = 0;
+						   const std::string &) const final;
 	};
 }
 
-#endif /* TRACEUR_EXPORTER_EXPORTER_H */
+#endif /* TRACEUR_EXPORTER_PPM_H */

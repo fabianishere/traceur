@@ -25,7 +25,8 @@
 #include <traceur/core/kernel/basic.hpp>
 #include <traceur/core/scene/primitive/primitive.hpp>
 
-traceur::Pixel traceur::BasicKernel::trace(const traceur::Scene &scene, const traceur::Ray &ray) const
+traceur::Pixel traceur::BasicKernel::trace(const traceur::Scene &scene,
+										   const traceur::Ray &ray) const
 {
 	traceur::Hit hit;
 	if (scene.graph->intersect(ray, hit)) {
@@ -35,13 +36,39 @@ traceur::Pixel traceur::BasicKernel::trace(const traceur::Scene &scene, const tr
 	return traceur::Pixel();
 }
 
-std::unique_ptr<traceur::Film> traceur::BasicKernel::render(const traceur::Scene &scene, const traceur::Camera &camera) const
+std::unique_ptr<traceur::Film> traceur::BasicKernel::render(const traceur::Scene &scene,
+															const traceur::Camera &camera) const
 {
-	/* TODO */
-	return std::make_unique<traceur::DirectFilm>(0, 0);
+	auto film = std::make_unique<traceur::DirectFilm>(camera.viewport[2],
+													  camera.viewport[3]);
+
+	traceur::Ray ray;
+	traceur::Pixel pixel;
+
+	for (int y = 0; y < film->height; y++) {
+		for (int x = 0; x < film->width; x++) {
+			ray = camera.rayFrom(glm::vec2(x, y));
+			pixel = trace(scene, ray);
+			(*film)(x, film->height - y - 1) = pixel;
+		}
+	}
+
+	return std::move(film);
 }
 
-void traceur::BasicKernel::render(const traceur::Scene &scene, const traceur::Camera &camera, traceur::Film &film, glm::vec2 &offset) const
+void traceur::BasicKernel::render(const traceur::Scene &scene,
+								  const traceur::Camera &camera,
+								  traceur::Film &film,
+								  const glm::ivec2 &offset) const
 {
-	/* TODO */
+	traceur::Ray ray;
+	traceur::Pixel pixel;
+
+	for (int y = offset[1]; y < film.height; y++) {
+		for (int x = offset[0]; x < film.width; x++) {
+			ray = camera.rayFrom(glm::vec2(x, y));
+			pixel = trace(scene, ray);
+			film(x, film.height - y - 1) = pixel;
+		}
+	}
 }

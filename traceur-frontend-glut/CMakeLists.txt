@@ -93,14 +93,11 @@ endif()
 # The module definition
 add_executable(traceur-frontend-glut
 	include/traceur/frontend/glut/visitor.hpp
-	include/imageWriter.h
 	include/matrix.h
-	include/raytracing.h
 	include/traqueboule.h
 
-	src/main.cpp
-	src/raytracing.cpp
+	src/frontend/glut/main.cpp
 	src/frontend/glut/visitor.cpp
 )
 target_include_directories(traceur-frontend-glut PRIVATE include/)
-target_link_libraries(traceur-frontend-glut traceur-loader-obj GLUT::GLUT OpenGL::GLU)
+target_link_libraries(traceur-frontend-glut traceur-loader-obj traceur-exporter-ppm GLUT::GLUT OpenGL::GLU)
