@@ -107,7 +107,7 @@ int main(int argc, char** argv)
 		printf("[%d] Loading scene at path \"%s\"\n", j, argv[i]);
 		auto scene = loader->load(path.str());
 
-		printf("[%d] Rendering scene (%s)\n", j, scheduler->name().c_str());
+		printf("[%d] Rendering scene [%s]\n", j, scheduler->name().c_str());
 
 		// Time the ray tracing
 		auto beginA = std::chrono::high_resolution_clock::now();
