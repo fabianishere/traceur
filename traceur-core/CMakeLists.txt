@@ -5,7 +5,15 @@ set(CMAKE_CXX_STANDARD 14)
 # Use an existing GLM installation on the system
 option(USE_SYSTEM_GLM "Use an existing GLM installation on the system instead of the library bundled in this distribution." OFF)
 
-# Dependencies
+# Threading
+find_package(Threads REQUIRED)
+if (NOT TARGET Threads::Threads)
+	add_library(Threads::Threads INTERFACE IMPORTED)
+	set_target_properties(Threads::Threads PROPERTIES
+		INTERFACE_LINK_LIBRARIES "${CMAKE_THREAD_LIBS_INIT}")
+endif()
+
+# GLM
 if (USE_SYSTEM_GLM)
 	find_library(GLM REQUIRED)
 	if (NOT GLM_FOUND)
