@@ -53,14 +53,19 @@ std::unique_ptr<traceur::SceneGraphVisitor> visitor;
 // The exporter we use to export the result
 std::unique_ptr<traceur::Exporter> exporter;
 
+// The default model to load
+const std::string DEFAULT_MODEL_PATH = "assets/cube.obj";
+
 // Window settings
 const unsigned int WindowSize_X = 800;  // resolution X
 const unsigned int WindowSize_Y = 800;  // resolution Y
 
 /**
  * Initialises the front-end.
+ *
+ * @param[in] path The path to the model to load.
  */
-void init()
+void init(std::string &path)
 {
 	//one first move: initialize the first light source
 	//at least ONE light source has to be in the scene!!!
@@ -69,7 +74,8 @@ void init()
 
 	auto factory = traceur::make_factory<traceur::VectorSceneGraphBuilder>();
 	auto loader = std::make_unique<traceur::ObjLoader>(std::move(factory));
-	scene = loader->load("cube.obj");
+	printf("[main] Loading model at path \"%s\"\n", path.c_str());
+	scene = loader->load(path);
 
 	kernel = std::make_unique<traceur::BasicKernel>();
 	visitor = std::make_unique<traceur::OpenGLSceneGraphVisitor>();
@@ -81,7 +87,7 @@ void init()
  */
 void render()
 {
-	printf("[main.cpp] rendering scene\n");
+	printf("[main] Rendering scene\n");
 
 	// Get the viewport of the window
 	glm::ivec4 viewport;
@@ -102,11 +108,11 @@ void render()
 	// Calculate the elapsed time
 	clock_t end = std::clock();
 	double secs = double(end - begin) / CLOCKS_PER_SEC;
-	printf("[main.cpp] rendering of scene took %f seconds\n", secs);
+	printf("[main] Rendering took %f seconds\n", secs);
 
 	// Export the result to a file
 	exporter->write(*result, "result.ppm");
-	printf("[main.cpp] saved result to result.ppm\n");
+	printf("[main] Saved result to result.ppm\n");
 }
 
 
@@ -221,7 +227,8 @@ int main(int argc, char** argv)
 	glutMotionFunc(tbMotionFunc);  // uses mouse
 	glutIdleFunc(animate);
 
-	init();
+	std::string path = argc >= 2 ? argv[1] : DEFAULT_MODEL_PATH;
+	init(path);
 
 	//main loop for glut... this just runs your application
 	glutMainLoop();
