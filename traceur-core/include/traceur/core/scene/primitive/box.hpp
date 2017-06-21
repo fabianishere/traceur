@@ -21,50 +21,46 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef TRACEUR_CORE_SCENE_PRIMITIVE_PRIMITIVE_H
-#define TRACEUR_CORE_SCENE_PRIMITIVE_PRIMITIVE_H
+#ifndef TRACEUR_CORE_SCENE_PRIMITIVE_BOX_H
+#define TRACEUR_CORE_SCENE_PRIMITIVE_BOX_H
 
-#include <memory>
-
-#include <glm/glm.hpp>
-
-#include <traceur/core/kernel/ray.hpp>
-#include <traceur/core/kernel/hit.hpp>
-#include <traceur/core/material/material.hpp>
-#include <traceur/core/scene/graph/visitor.hpp>
+#include <limits>
+#include <traceur/core/scene/primitive/primitive.hpp>
 
 namespace traceur {
 	/**
-	 * A geometric primitive is a shape for which a ray-shape intersection
-	 * method has been implemented.
-	 * More complex objects in the scene graph can be built out of these
-	 * primitives.
+	 * A primitive that represents a box.
 	 */
-	class Primitive {
+	class Box : public Primitive {
 	public:
 		/**
-		 * The position of the primtive.
+		 * The minimum vertex in the box.
 		 */
-		glm::vec3 origin;
+		glm::vec3 min;
 
 		/**
-		 * The material of the primitive.
+		 * The maximum vertex in the box.
 		 */
-		std::shared_ptr<traceur::Material> material;
+		glm::vec3 max;
 
 		/**
-		 * Construct a {@link Primitive} instance.
+		 * Construct a {@link Box} instance.
 		 *
-		 * @param[in] origin The position of the primitive.
 		 * @param[in] material The material of the primitive.
 		 */
-		Primitive(const glm::vec3 &origin, const std::shared_ptr<traceur::Material> material) :
-			origin(origin), material(material) {}
+		Box(const std::shared_ptr<traceur::Material> material) :
+				Primitive(glm::vec3(), material), min(glm::vec3()), max(glm::vec3()) {}
 
 		/**
-		 * Deconstruct the {@link Primitive} instance.
+		 * Construct a {@link Box} instance.
+		 *
+		 * @param[in] min The minimum vertex in the box.
+		 * @param[in] max The maximum vertex in the box.
+		 * @param[in] material The material of the primitive.
 		 */
-		virtual ~Primitive() {}
+		Box(const glm::vec3 &min, const glm::vec3 max,
+			const std::shared_ptr<traceur::Material> material) :
+				Primitive((min + max) / 2.f, material), min(min), max(max) {}
 
 		/**
 		 * Determine whether the given ray intersects the shape.
@@ -75,15 +71,38 @@ namespace traceur {
 		 * @return <code>true</code> if the shape intersects the ray, otherwise
 		 * <code>false</code>.
 		 */
-		inline virtual bool intersect(const traceur::Ray &, traceur::Hit &) const = 0;
+		inline virtual bool intersect(const traceur::Ray &ray,
+									  traceur::Hit &hit) const final
+		{
+			/* TODO precalculate inverse */
+			glm::vec3 inverse = 1.0f / ray.direction;
+			auto u = (min - ray.origin) * inverse;
+			auto v = (max - ray.origin) * inverse;
+
+			float tmin = std::fmax(std::fmax(std::fmin(u[0], v[0]), std::fmin(u[1], v[1])), std::fmin(u[2], v[2]));
+			float tmax = std::fmin(std::fmin(std::fmax(u[0], v[0]), std::fmax(u[1], v[1])), std::fmax(u[2], v[2]));
+
+			if (tmax < 0)
+				return false;
+			if (tmin > tmax)
+				return false;
+
+			hit.primitive = this;
+			hit.distance = tmin;
+			hit.position = ray.origin + tmin * ray.direction;
+			return true;
+		}
 
 		/**
-		 * Accept a {@link SceneGraphVisitor} instance to visit this node in  
+		 * Accept a {@link SceneGraphVisitor} instance to visit this node in
 		 * the graph of the scene.
 		 *
 		 * @param[in] visitor The visitor to accept.
 		 */
-		inline virtual void accept(traceur::SceneGraphVisitor &) const = 0;
+		inline virtual void accept(traceur::SceneGraphVisitor &visitor) const final
+		{
+			visitor.visit(*this);
+		}
 
 		/**
 		 * Return the bounding {@link Box} which encapsulates the whole
@@ -91,7 +110,10 @@ namespace traceur {
 		 *
 		 * @return The bounding {@link Box} instance.
 		 */
-		virtual const Box & bounding_box() const = 0;
+		virtual const traceur::Box & bounding_box() const final
+		{
+			return *this;
+		}
 	};
 }
 

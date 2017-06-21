@@ -32,6 +32,7 @@
 
 #include <traceur/core/scene/graph/graph.hpp>
 #include <traceur/core/scene/graph/builder.hpp>
+#include <traceur/core/scene/primitive/box.hpp>
 
 namespace traceur {
 	/**
@@ -43,13 +44,21 @@ namespace traceur {
 		 * The nodes in the graph.
 		 */
 		const std::unique_ptr<std::vector<std::shared_ptr<traceur::Primitive>>> nodes;
+
+		/**
+		 * The bounding box of this graph.
+		 */
+		const traceur::Box box;
 	public:
 		/**
 		 * Construct a {@link VectorSceneGraph} instance.
 		 *
 		 * @param[in] nodes The nodes in the graph.
+		 * @param[in] box The bounding box of this graph.
 		 */
-		VectorSceneGraph(const std::vector<std::shared_ptr<traceur::Primitive>> &nodes) :
+		VectorSceneGraph(const std::vector<std::shared_ptr<traceur::Primitive>> &nodes,
+						 const traceur::Box &box
+		) : box(box),
 			nodes(std::make_unique<std::vector<std::shared_ptr<traceur::Primitive>>>(nodes)) {}
 		
 		/**
@@ -81,7 +90,23 @@ namespace traceur {
 		 * The current nodes in the partial graph.
 		 */
 		std::vector<std::shared_ptr<traceur::Primitive>> nodes;
+		/**
+		 * The minimum vertex in the scene.
+		 */
+		glm::vec3 min;
+		/**
+		 * The maximum vertex in the scene.
+		 */
+		glm::vec3 max;
 	public:
+		/**
+		 * Construct a {@link VectorSceneGraphBuilder} instance.
+		 */
+		VectorSceneGraphBuilder()
+		{
+			min = glm::vec3(std::numeric_limits<float>::infinity());
+			max = -min;
+		}
 		/**
 		 * Add a node to the graph of the scene.
 		 *

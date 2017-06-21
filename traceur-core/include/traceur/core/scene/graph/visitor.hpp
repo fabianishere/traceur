@@ -29,6 +29,7 @@ namespace traceur {
 	class Primitive;
 	class Sphere;
 	class Triangle;
+	class Box;
 
 	/**
 	 * A visitor of the {@link SceneGraph} that traverses the graph.
@@ -65,6 +66,13 @@ namespace traceur {
 		 * @param[in] node The node to visit.
 		 */
 		virtual void visit(const traceur::Triangle &) {}
+
+		/**
+		 * Visit a {@link Box} primitive in the scene graph.
+		 *
+		 * @param[in] node The node to visit.
+		 */
+		virtual void visit(const traceur::Box &) {}
 	};
 }
 
