@@ -21,27 +21,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef TRACEUR_CORE_KERNEL_BASIC_H
-#define TRACEUR_CORE_KERNEL_BASIC_H
+#ifndef TRACEUR_CORE_KERNEL_MULTITHREADED_H
+#define TRACEUR_CORE_KERNEL_MULTITHREADED_H
+
+#include <future>
+#include <memory>
 
 #include <traceur/core/kernel/kernel.hpp>
 #include <traceur/core/kernel/pixel.hpp>
 
 namespace traceur {
 	/**
-	 * A basic CPU raytracing {@link Kernel} that provides no optimizations and
-	 * only implements ambient shading.
+	 * A scheduling {@link Kernel} that runs another kernel on multiple threads.
 	 */
-	class BasicKernel: public Kernel {
+	class MultithreadedKernel: public Kernel {
+		/**
+		 * The underlying kernel to use.
+		 */
+		std::shared_ptr<traceur::Kernel> kernel;
 	public:
 		/**
-		 * Trace a single ray into the {@link Scene}.
-		 *
-		 * @param[in] scene The {@link Scene} to trace the ray into.
-		 * @param[in] ray The {@link Ray} to trace into the scene.
-		 * @return The color that has been found by the kernel.
+		 * The amount of threads that the kernel spawns for a render.
 		 */
-		traceur::Pixel trace(const traceur::Scene &, const traceur::Ray &) const;
+		int N;
+
+		/**
+		 * Construct a {@link MultithreadedKernel}.
+		 *
+		 * @param[in] kernel The ray-tracing {@link Kernel} to use.
+		 * @param[in] N the maximum amount of threads to spawn.
+		 */
+		MultithreadedKernel(const std::shared_ptr<traceur::Kernel>, int);
 		
 		/**
 		 * Render the camera view of the given {@link Scene} into a
@@ -57,6 +67,8 @@ namespace traceur {
 		/**
 		 * Render a part of the given {@link Scene} into the {@link Film}
 		 * passed to this function.
+		 *
+		 * NOTE: This method does not work with multiple threads.
 		 *
 		 * @param[in] scene The {@link Scene} to render.
 		 * @param[in] camera The {@link Camera} to use.
@@ -75,10 +87,11 @@ namespace traceur {
 		 */
 		virtual const std::string & name() const final
 		{
-			static const std::string name = "basic";
+			static const std::string name = kernel->name() + "-multithreaded-"
+											+ std::to_string(N);
 			return name;
 		}
 	};
 }
 
-#endif /* TRACEUR_CORE_KERNEL_BASIC_H */
+#endif /* TRACEUR_CORE_KERNEL_MULTITHREADED_H */

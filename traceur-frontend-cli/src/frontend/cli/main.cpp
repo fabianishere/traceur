@@ -22,6 +22,7 @@
  * THE SOFTWARE.
  */
 #include <ctime>
+#include <chrono>
 #include <memory>
 #include <filesystem/path.h>
 #include <iostream>
@@ -29,6 +30,7 @@
 #include <glm/glm.hpp>
 
 #include <traceur/core/kernel/basic.hpp>
+#include <traceur/core/kernel/multithreaded.hpp>
 #include <traceur/core/scene/graph/factory.hpp>
 #include <traceur/core/scene/graph/vector.hpp>
 #include <traceur/loader/obj.hpp>
@@ -45,6 +47,8 @@ int main(int argc, char** argv)
 	int c = -1;
 	int width = 800;
 	int height = 800;
+	int N = 8;
+
 
 	// Set camera directions
 	glm::vec3 eye = glm::vec3(2, 2, 4);
@@ -52,13 +56,17 @@ int main(int argc, char** argv)
 	glm::vec3 up = glm::vec3(0, 1, 0);
 
 	float x = 0.f, y = 0.f, z = 0.f;
-	while ((c = getopt(argc, argv, "w:h:e:c:u:")) != -1) {
+	while ((c = getopt(argc, argv, "w:h:e:c:u:N:")) != -1) {
 		switch(c) {
 			case 'w':
 				width = atoi(optarg);
 				break;
 			case 'h':
 				height = atoi(optarg);
+				break;
+			case 'N':
+				N = atoi(optarg);
+				break;
 			case 'e':
 				sscanf(optarg, "(%f, %f, %f)", &x, &y, &z);
 				eye = glm::vec3(x, y, z);
@@ -76,10 +84,14 @@ int main(int argc, char** argv)
 		}
 	}
 
+	/* Scene loaders and exporters */
 	auto factory = traceur::make_factory<traceur::VectorSceneGraphBuilder>();
 	auto loader = std::make_unique<traceur::ObjLoader>(std::move(factory));
-	auto kernel = std::make_unique<traceur::BasicKernel>();
 	auto exporter = std::make_unique<traceur::PPMExporter>();
+
+	/* Tracing and scheduling kernels */
+	auto tracer = std::make_unique<traceur::BasicKernel>();
+	auto scheduler = std::make_unique<traceur::MultithreadedKernel>(std::move(tracer), N);
 
 	// Set up viewport
 	glm::ivec4 viewport = glm::ivec4(0, 0, width, height);
@@ -95,18 +107,21 @@ int main(int argc, char** argv)
 		printf("[%d] Loading scene at path \"%s\"\n", j, argv[i]);
 		auto scene = loader->load(path.str());
 
-		printf("[%d] Rendering scene (kernel = %s)\n", j, "basic");
+		printf("[%d] Rendering scene (%s)\n", j, scheduler->name().c_str());
 
 		// Time the ray tracing
-		clock_t begin = std::clock();
+		auto beginA = std::chrono::high_resolution_clock::now();
+		auto beginB = std::clock();
 
 		// Render the scene and capture the result
-		auto result = kernel->render(*scene, camera);
+		auto result = scheduler->render(*scene, camera);
 
 		// Calculate the elapsed time
-		clock_t end = std::clock();
-		double secs = double(end - begin) / CLOCKS_PER_SEC;
-		printf("[%d] Rendering took %f seconds\n", j, secs);
+		auto endA = std::chrono::high_resolution_clock::now();
+		auto endB = std::clock();
+		double real = std::chrono::duration_cast<std::chrono::duration<double>>(endA - beginA).count();
+		double cpu = double(endB - beginB) / CLOCKS_PER_SEC;
+		printf("[%d] Rendering done (cpu %.3fs, real %.3fs)\n", j, cpu, real);
 
 		// Export the result to a file
 		auto target = path.filename() + ".ppm";

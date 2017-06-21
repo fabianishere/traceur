@@ -22,42 +22,48 @@
  * THE SOFTWARE.
  */
 
-#include <traceur/core/kernel/basic.hpp>
-#include <traceur/core/scene/primitive/primitive.hpp>
+#include <traceur/core/kernel/multithreaded.hpp>
 
-traceur::Pixel traceur::BasicKernel::trace(const traceur::Scene &scene,
-										   const traceur::Ray &ray) const
+traceur::MultithreadedKernel::MultithreadedKernel(const std::shared_ptr<traceur::Kernel> kernel, int N) :
+	kernel(kernel), N(N) {}
+
+std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(
+		const traceur::Scene &scene,
+		const traceur::Camera &camera) const
 {
-	traceur::Hit hit;
-	if (scene.graph->intersect(ray, hit)) {
-		return hit.primitive->material->diffuse;
+	auto film = std::make_unique<traceur::PartitionedFilm<traceur::DirectFilm>>(
+			camera.viewport[2],
+			camera.viewport[3],
+			N
+	);
+	auto tasks = std::vector<std::future<void>>(film->n);
+
+	/* Initialise threads */
+	for (int i = 0; i < film->n; i++) {
+		auto &partition = (*film)(i);
+		auto offset = glm::ivec2(
+				(i * partition.width) % film->width,
+				(i / film->columns) * partition.height
+		);
+
+		tasks[i] = std::async(std::launch::async, [this, &scene, offset, &partition, &camera] {
+			this->kernel->render(scene, camera, partition, offset);
+		});
 	}
 
-	return traceur::Pixel();
-}
+	/* Wait for all tasks */
+	for (auto &task : tasks) {
+		task.wait();
+	}
 
-std::unique_ptr<traceur::Film> traceur::BasicKernel::render(const traceur::Scene &scene,
-															const traceur::Camera &camera) const
-{
-	auto film = std::make_unique<traceur::DirectFilm>(camera.viewport[2],
-													  camera.viewport[3]);
-	render(scene, camera, *film, glm::ivec2());
 	return std::move(film);
 }
 
-void traceur::BasicKernel::render(const traceur::Scene &scene,
-								  const traceur::Camera &camera,
-								  traceur::Film &film,
-								  const glm::ivec2 &offset) const
+void traceur::MultithreadedKernel::render(
+		const traceur::Scene &scene,
+		const traceur::Camera &camera,
+		traceur::Film &film,
+		const glm::ivec2 &offset) const
 {
-	traceur::Ray ray;
-	traceur::Pixel pixel;
-
-	for (int y = 0; y < film.height; y++) {
-		for (int x = 0; x < film.width; x++) {
-			ray = camera.rayFrom(glm::vec2(x + offset[0], y + offset[1]));
-			pixel = trace(scene, ray);
-			film(x, y) = pixel;
-		}
-	}
+	kernel->render(scene, camera, film, offset);
 }

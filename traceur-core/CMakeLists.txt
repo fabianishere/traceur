@@ -37,7 +37,9 @@ add_library(traceur-core STATIC
 	include/traceur/core/kernel/hit.hpp
 	include/traceur/core/kernel/ray.hpp
 	include/traceur/core/kernel/basic.hpp
+	include/traceur/core/kernel/multithreaded.hpp
 	src/traceur/core/kernel/basic.cpp
+	src/traceur/core/kernel/multithreaded.cpp
 
 	include/traceur/core/lightning/light.hpp
 	include/traceur/core/material/material.hpp
