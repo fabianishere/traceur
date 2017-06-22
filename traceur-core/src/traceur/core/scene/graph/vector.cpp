@@ -55,8 +55,11 @@ inline bool traceur::VectorSceneGraph::intersect(const traceur::Ray &ray, traceu
 	return intersection;
 }
 
-void traceur::VectorSceneGraph::traverse(traceur::SceneGraphVisitor &visitor) const
+void traceur::VectorSceneGraph::accept(traceur::SceneGraphVisitor &visitor) const
 {
+	/* Visit the root node */
+	visitor.visit(*this);
+
 	for (auto &primitive : *nodes) {
 		primitive->accept(visitor);
 	}
