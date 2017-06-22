@@ -21,8 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef TRACEUR_CORE_SCENE_GRAPH_GRAPH_H
-#define TRACEUR_CORE_SCENE_GRAPH_GRAPH_H
+#ifndef TRACEUR_CORE_SCENE_GRAPH_NODE_H
+#define TRACEUR_CORE_SCENE_GRAPH_NODE_H
 
 #include <traceur/core/scene/graph/visitor.hpp>
 #include <traceur/core/kernel/ray.hpp>
@@ -30,16 +30,32 @@
 
 namespace traceur {
 	/**
-	 * An immutable (acceleration) data structure which arranges the logical
-	 * and often (but not necessarily) spatial representation of a graphical
-	 * scene.
+	 * A node in the {@link SceneGraph} which could be a primitive or a
+	 * collection of primitives.
 	 */
-	class SceneGraph {
+	class Node {
 	public:
 		/**
-		 * Deconstruct the {@link SceneGraph} instance.
+		 * The position of the node in the scene.
 		 */
-		virtual ~SceneGraph() {}
+		glm::vec3 origin;
+
+		/**
+		 * Construct a {@link Node} instance.
+		 */
+		Node() : origin(glm::vec3()) {}
+
+		/**
+		 * Construct a {@link Node} instance.
+		 *
+		 * @param[in] The position of the node.
+		 */
+		Node(const glm::vec3 &origin) : origin(origin) {}
+
+		/**
+		 * Deconstruct the {@link Node} instance.
+		 */
+		virtual ~Node() {}
 
 		/**
 		 * Determine whether the given ray intersects a shape in the geometry
@@ -54,13 +70,20 @@ namespace traceur {
 		inline virtual bool intersect(const traceur::Ray &, traceur::Hit &) const = 0;
 
 		/**
-		 * Accept a {@link SceneGraphVisitor} instance to traverse this scene
-		 * graph.
+		 * Accept a {@link SceneGraphVisitor} instance to visit this node in
+		 * the graph of the scene.
 		 *
 		 * @param[in] visitor The visitor to accept.
 		 */
 		virtual void accept(traceur::SceneGraphVisitor &) const = 0;
+
+		/**
+		 * Return the bounding {@link Box} which encapsulates the whole node.
+		 *
+		 * @return A bounding {@link Box} of the node.
+		 */
+		virtual const Box & bounding_box() const = 0;
 	};
 }
 
-#endif /* TRACEUR_CORE_SCENE_GRAPH_GRAPH_H */
+#endif /* TRACEUR_CORE_SCENE_GRAPH_NODE_H */

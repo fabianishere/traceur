@@ -71,8 +71,7 @@ namespace traceur {
 		 * @return <code>true</code> if the shape intersects the ray, otherwise
 		 * <code>false</code>.
 		 */
-		inline virtual bool intersect(const traceur::Ray &ray,
-									  traceur::Hit &hit) const final
+		inline virtual bool intersect(const traceur::Ray &ray, traceur::Hit &hit) const final
 		{
 			/* TODO precalculate inverse */
 			glm::vec3 inverse = 1.0f / ray.direction;

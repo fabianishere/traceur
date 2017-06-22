@@ -26,12 +26,9 @@
 
 #include <memory>
 
-#include <glm/glm.hpp>
-
-#include <traceur/core/kernel/ray.hpp>
-#include <traceur/core/kernel/hit.hpp>
-#include <traceur/core/material/material.hpp>
+#include <traceur/core/scene/graph/node.hpp>
 #include <traceur/core/scene/graph/visitor.hpp>
+#include <traceur/core/material/material.hpp>
 
 namespace traceur {
 	/**
@@ -40,13 +37,8 @@ namespace traceur {
 	 * More complex objects in the scene graph can be built out of these
 	 * primitives.
 	 */
-	class Primitive {
+	class Primitive : public Node {
 	public:
-		/**
-		 * The position of the primtive.
-		 */
-		glm::vec3 origin;
-
 		/**
 		 * The material of the primitive.
 		 */
@@ -55,43 +47,16 @@ namespace traceur {
 		/**
 		 * Construct a {@link Primitive} instance.
 		 *
-		 * @param[in] origin The position of the primitive.
+		 * @param[in] origin The origin of the primitive.
 		 * @param[in] material The material of the primitive.
 		 */
 		Primitive(const glm::vec3 &origin, const std::shared_ptr<traceur::Material> material) :
-			origin(origin), material(material) {}
+			Node(origin), material(material) {}
 
 		/**
 		 * Deconstruct the {@link Primitive} instance.
 		 */
 		virtual ~Primitive() {}
-
-		/**
-		 * Determine whether the given ray intersects the shape.
-		 *
-		 * @param[in] ray The ray to intersect with this shape.
-		 * @param[in] hit The intersection structure to which the details will
-		 * be written to.
-		 * @return <code>true</code> if the shape intersects the ray, otherwise
-		 * <code>false</code>.
-		 */
-		inline virtual bool intersect(const traceur::Ray &, traceur::Hit &) const = 0;
-
-		/**
-		 * Accept a {@link SceneGraphVisitor} instance to visit this node in  
-		 * the graph of the scene.
-		 *
-		 * @param[in] visitor The visitor to accept.
-		 */
-		inline virtual void accept(traceur::SceneGraphVisitor &) const = 0;
-
-		/**
-		 * Return the bounding {@link Box} which encapsulates the whole
-		 * primitive.
-		 *
-		 * @return The bounding {@link Box} instance.
-		 */
-		virtual const Box & bounding_box() const = 0;
 	};
 }
 

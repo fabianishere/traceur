@@ -52,7 +52,7 @@ namespace traceur {
 		/**
 		 * Construct a {@link Triangle} instance.
 		 *
-		 * @param[in] origin The origin location of the sphere.
+		 * @param[in] origin The first vertex of the triangle.
 		 * @param[in] u The vector to the second component.
 		 * @param[in] v The vector to the third component.
 		 * @param[in] material The material of the triangle.
@@ -104,7 +104,7 @@ namespace traceur {
 
 			auto a = (d11 * d20 - d01 * d21) * invDenom;
 			auto b = (d00 * d21 - d01 * d20) * invDenom;
-	
+
 			// Intersection with triangle's plane but outside triangle
 			if (a < -0.000f || b < -0.000f || a + b > 1) {
 				return false;
@@ -119,7 +119,7 @@ namespace traceur {
 		}
 
 		/**
-		 * Accept a {@link SceneGraphVisitor} instance to visit this node in  
+		 * Accept a {@link SceneGraphVisitor} instance to visit this node in
 		 * the graph of the scene.
 		 *
 		 * @param[in] visitor The visitor to accept.
