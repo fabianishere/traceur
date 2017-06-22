@@ -12,6 +12,7 @@ Debug
 bin
 lib
 build
+cmake-build-debug
 
 # Prerequisites
 *.d
