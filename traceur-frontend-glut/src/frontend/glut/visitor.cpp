@@ -33,25 +33,92 @@
 #include <traceur/frontend/glut/visitor.hpp>
 
 
+void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Node &node) {
+	if (draw_bounding_box) {
+		visit_bounding_box(node.bounding_box());
+	}
+}
+
 void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Sphere &sphere)
 {
 	auto o = sphere.origin;
 	glPushMatrix();
 	glTranslatef(o[0], o[1], o[2]);
-	glutSolidSphere(sphere.radius, 5, 5);
+	glColor3fv(glm::value_ptr(sphere.material->diffuse));
+	glutSolidSphere(sphere.radius, 50, 50);
 	glPopMatrix();
+
+	if (draw_bounding_box) {
+		visit_bounding_box(sphere.bounding_box());
+	}
 }
 
 void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Triangle &triangle)
 {
 	glBegin(GL_TRIANGLES);
 		glColor3fv(glm::value_ptr(triangle.material->diffuse));
-	
+
 		auto n = glm::normalize(glm::cross(triangle.u, triangle.v));
 		glNormal3fv(glm::value_ptr(n));
 		glVertex3fv(glm::value_ptr(triangle.origin));
 		glVertex3fv(glm::value_ptr(triangle.origin + triangle.u));
 		glVertex3fv(glm::value_ptr(triangle.origin + triangle.v));
 	glEnd();
+
+	if (draw_bounding_box) {
+		visit_bounding_box(triangle.bounding_box());
+	}
 }
 
+void draw_box(const traceur::Box &box, const glm::vec3 &color)
+{
+	auto min = box.bounding_box().min;
+	auto max = box.bounding_box().max;
+
+	glBegin(GL_QUADS);
+		glColor3fv(glm::value_ptr(color));
+		// front
+		glVertex3f(max[0], max[1], max[2]);
+		glVertex3f(min[0], max[1], max[2]);
+		glVertex3f(min[0], min[1], max[2]);
+		glVertex3f(max[0], min[1], max[2]);
+		// back
+		glVertex3f(max[0], max[1], min[2]);
+		glVertex3f(max[0], min[1], min[2]);
+		glVertex3f(min[0], min[1], min[2]);
+		glVertex3f(min[0], max[1], min[2]);
+		// right
+		glVertex3f(max[0], max[1], max[2]);
+		glVertex3f(max[0], min[1], max[2]);
+		glVertex3f(max[0], min[1], min[2]);
+		glVertex3f(max[0], max[1], min[2]);
+		// left
+		glVertex3f(min[0], max[1], max[2]);
+		glVertex3f(min[0], max[1], min[2]);
+		glVertex3f(min[0], min[1], min[2]);
+		glVertex3f(min[0], min[1], max[2]);
+		// top
+		glVertex3f(max[0], max[1], max[2]);
+		glVertex3f(max[0], max[1], min[2]);
+		glVertex3f(min[0], max[1], min[2]);
+		glVertex3f(min[0], max[1], max[2]);
+		// bottom
+		glVertex3f(max[0], min[1], max[2]);
+		glVertex3f(min[0], min[1], max[2]);
+		glVertex3f(min[0], min[1], min[2]);
+		glVertex3f(max[0], min[1], min[2]);
+	glEnd();
+}
+
+void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Box &box)
+{
+	draw_box(box, box.material->diffuse);
+}
+
+void traceur::OpenGLSceneGraphVisitor::visit_bounding_box(const traceur::Box &box)
+{
+	/* Draw wireframe */
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	draw_box(box, glm::vec3(255, 0, 0));
+	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+}
