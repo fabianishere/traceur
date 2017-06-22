@@ -24,8 +24,10 @@
 #include <ctime>
 #include <chrono>
 #include <memory>
-#include <filesystem/path.h>
 #include <iostream>
+
+#include <getopt.h>
+#include <filesystem/path.h>
 
 #include <glm/glm.hpp>
 
