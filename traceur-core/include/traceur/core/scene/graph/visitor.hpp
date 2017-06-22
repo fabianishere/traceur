@@ -26,6 +26,7 @@
 
 namespace traceur {
 	/* Forward declarations */
+	class Node;
 	class Primitive;
 	class Sphere;
 	class Triangle;
@@ -47,12 +48,19 @@ namespace traceur {
 		virtual ~SceneGraphVisitor() {}
 
 		/**
+		 * Visit a {@link Node} in the scene graph.
+		 *
+		 * @param[in] node The node to visit.
+		 */
+		virtual void visit(const traceur::Node &) {}
+
+		/**
 		 * Visit a {@link Primitive} node in the scene graph.
 		 *
 		 * @param[in] node The node to visit.
 		 */
 		virtual void visit(const traceur::Primitive &) {}
-	
+
 		/**
 		 * Visit a {@link Sphere} primitive in the scene graph.
 		 *
