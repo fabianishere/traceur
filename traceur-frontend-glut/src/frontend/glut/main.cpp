@@ -88,8 +88,6 @@ void init(std::string &path)
  */
 void render()
 {
-	printf("[main] Rendering scene\n");
-
 	// Get the viewport of the window
 	glm::ivec4 viewport;
 	glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
@@ -100,16 +98,21 @@ void render()
 			.perspective(glm::radians(50.f), 1, 0.01, 10);
 
 
+	printf("[main] Rendering scene [%s]\n", kernel->name().c_str());
+
 	// Time the ray tracing
-	clock_t begin = std::clock();
+	auto beginA = std::chrono::high_resolution_clock::now();
+	auto beginB = std::clock();
 
 	// Render the scene and capture the result
 	auto result = kernel->render(*scene, camera);
 
 	// Calculate the elapsed time
-	clock_t end = std::clock();
-	double secs = double(end - begin) / CLOCKS_PER_SEC;
-	printf("[main] Rendering took %f seconds\n", secs);
+	auto endA = std::chrono::high_resolution_clock::now();
+	auto endB = std::clock();
+	double real = std::chrono::duration_cast<std::chrono::duration<double>>(endA - beginA).count();
+	double cpu = double(endB - beginB) / CLOCKS_PER_SEC;
+	printf("[main] Rendering done (cpu %.3fs, real %.3fs)\n", cpu, real);
 
 	// Export the result to a file
 	exporter->write(*result, "result.ppm");
