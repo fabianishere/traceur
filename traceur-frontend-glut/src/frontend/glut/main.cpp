@@ -1,4 +1,4 @@
-#ifdef WIN32
+﻿#ifdef WIN32
 #include <windows.h>
 #endif
 
@@ -76,6 +76,7 @@ void init(std::string &path)
 	auto loader = std::make_unique<traceur::ObjLoader>(std::move(factory));
 	printf("[main] Loading model at path \"%s\"\n", path.c_str());
 	scene = loader->load(path);
+	scene->lights = MyLightPositions;
 
 	kernel = std::make_unique<traceur::BasicKernel>();
 	visitor = std::make_unique<traceur::OpenGLSceneGraphVisitor>();
@@ -98,6 +99,9 @@ void render()
 			.lookAt(getCameraPosition(), getCameraDirection(), getCameraUp())
 			.perspective(glm::radians(50.f), 1, 0.01, 10);
 
+	scene->camera = camera;
+
+	printf("%zu\n", scene->lights.size());
 
 	// Time the ray tracing
 	clock_t begin = std::clock();

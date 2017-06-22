@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -28,7 +28,7 @@
 void traceur::PPMExporter::write(const traceur::Film &film,
 								 const std::string &path) const
 {
-	auto file = fopen(path.c_str(), "w");
+	auto file = fopen(path.c_str(), "wb");
 
 	if (!file) {
 		/* TODO throw exception */

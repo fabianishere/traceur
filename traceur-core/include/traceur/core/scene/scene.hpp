@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -29,6 +29,7 @@
 
 #include <traceur/core/scene/graph/graph.hpp>
 #include <traceur/core/lightning/light.hpp>
+#include <traceur/core/scene/camera.hpp>
 
 namespace traceur {
 	/**
@@ -47,6 +48,11 @@ namespace traceur {
 		 */
 		std::vector<traceur::Light> lights;
 
+		/**
+		 * The camera of the scene.
+		 */
+		traceur::Camera camera;
+		0
 		/**
 		 * Construct a {@link Scene} instance.
 		 */

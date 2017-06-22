@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -36,7 +36,8 @@ namespace traceur {
 		/**
 		 * The diffuse, ambient and specular terms of this material.
 		 */
-		glm::vec3 diffuse, ambient, specular;
+		glm::fvec3 diffuse, ambient, specular;
+		//glm::vec3 diffuse, ambient, specular;
 
 		/**
 		 * The specular exponent of the material.

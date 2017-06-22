@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -37,6 +37,7 @@ traceur::Camera traceur::Camera::lookAt(const glm::vec3 &position,
 										const glm::vec3 &up) const
 {
 	traceur::Camera camera(viewport);
+	camera.position = position;
 	camera.model = glm::lookAt(position, position + direction, up);
 	camera.projection = projection;
 	return camera;
@@ -47,6 +48,7 @@ traceur::Camera traceur::Camera::perspective(float fov, float aspect,
 											 float near, float far) const
 {
 	Camera camera(viewport);
+	camera.position = position;
 	camera.model = model;
 	camera.projection = glm::perspective(fov, aspect, near, far);
 	return camera;
@@ -58,6 +60,7 @@ traceur::Camera traceur::Camera::orthographic(float left, float right,
 											  float near, float far) const
 {
 	Camera camera(viewport);
+	camera.position = position;
 	camera.model = model;
 	camera.projection = glm::ortho(left, right, bottom, top, near, far);
 	return camera;

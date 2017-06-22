@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -24,16 +24,56 @@
 
 #include <traceur/core/kernel/basic.hpp>
 #include <traceur/core/scene/primitive/primitive.hpp>
+#include <algorithm>
+#include <iostream>
+#include <stdio.h>
 
 traceur::Pixel traceur::BasicKernel::trace(const traceur::Scene &scene,
-										   const traceur::Ray &ray) const
+										   const traceur::Ray &ray,
+											int i) const
 {
 	traceur::Hit hit;
 	if (scene.graph->intersect(ray, hit)) {
-		return hit.primitive->material->diffuse;
+		return shade(hit, scene, ray);
+	}
+	return traceur::Pixel();
+}
+
+traceur::Pixel traceur::BasicKernel::shade(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray) const {
+	traceur::Pixel pixel = traceur::Pixel(0, 0, 0);
+	glm::vec3 vertexPos = ray.origin + (hit.distance * ray.direction);
+
+	for (int i = 0; i < scene.lights.size(); i++) {
+		glm::vec3 lightDir = scene.lights[i] - vertexPos;
+		lightDir = glm::normalize(lightDir);
+		pixel += hit.primitive->material->ambient;
+		pixel = diffuseOnly(hit, lightDir);
+		pixel += blinnPhong(hit, scene, ray, vertexPos, lightDir);
 	}
 
-	return traceur::Pixel();
+	return pixel;
+}
+traceur::Pixel traceur::BasicKernel::diffuseOnly(const traceur::Hit &hit, const glm::vec3 &lightDir) const {
+	float dot = glm::dot(hit.normal, lightDir); // glm::dot(hit.normal, lightDir);
+	if (dot < 0.0f) dot = 0.0f;
+
+	//else printf("%f\n", dot);
+	//auto x = hit.primitive->material->diffuse;
+	//std::cout << dot << " " << lightDir.y << " " << lightDir.z << std::endl;
+	return hit.primitive->material->diffuse * dot;
+}
+
+traceur::Pixel traceur::BasicKernel::blinnPhong(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray, const glm::vec3 &vertexPos, const glm::vec3 &lightDir) const {
+	glm::vec3 viewDir = scene.camera.position - vertexPos;
+	viewDir = glm::normalize(viewDir);
+
+	glm::vec3 halfVector = viewDir + lightDir;
+	halfVector = glm::normalize(halfVector);
+
+	float specularity = std::max(glm::dot(halfVector, hit.normal), 0.0f);
+	specularity = pow(specularity, hit.primitive->material->shininess);
+
+	return specularity * hit.primitive->material->specular;
 }
 
 std::unique_ptr<traceur::Film> traceur::BasicKernel::render(const traceur::Scene &scene,
@@ -56,7 +96,7 @@ void traceur::BasicKernel::render(const traceur::Scene &scene,
 	for (int y = 0; y < film.height; y++) {
 		for (int x = 0; x < film.width; x++) {
 			ray = camera.rayFrom(glm::vec2(x + offset[0], y + offset[1]));
-			pixel = trace(scene, ray);
+			pixel = trace(scene, ray, 0);
 			film(x, y) = pixel;
 		}
 	}

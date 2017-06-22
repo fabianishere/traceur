@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -41,8 +41,41 @@ namespace traceur {
 		 * @param[in] ray The {@link Ray} to trace into the scene.
 		 * @return The color that has been found by the kernel.
 		 */
-		traceur::Pixel trace(const traceur::Scene &, const traceur::Ray &) const;
-		
+		traceur::Pixel trace(const traceur::Scene &, const traceur::Ray &, int i) const;
+
+		/**
+		 * Color a pixel with a given hit.
+		 *
+		 * @param[in] hit The given hit.
+		 * @param[in] scene The {@link Scene} to gather lights.
+		 * @return The color that has been found.
+		 */
+		traceur::Pixel traceur::BasicKernel::shade(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &) const;
+
+		/**
+		 * Color a pixel with a diffuse effect
+		 *
+		 *
+		 */
+		traceur::Pixel traceur::BasicKernel::diffuseOnly(const traceur::Hit &hit, const glm::vec3 &lightDir) const;
+
+		/**
+		 * Returns a colored pixel with blinnPhong shading applied.
+		 *
+		 * @param[in] hit The given hit.
+		 * @param[in] scene The {@link Scene} to gather lights.
+		 * @return The colored pixel.
+		 */
+		traceur::Pixel traceur::BasicKernel::blinnPhong(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray, const glm::vec3 &vertexPos, const glm::vec3 &lightDir) const;
+
+		/**
+		 * Returns the normal of the intersected triangle
+		 *
+		 * @param[in] hit The given hit.
+		 * @return The normal.
+		 */
+		glm::vec3 traceur::BasicKernel::calculateNormal(const traceur::Hit &hit) const;
+
 		/**
 		 * Render the camera view of the given {@link Scene} into a
 		 * {@link Film}.
