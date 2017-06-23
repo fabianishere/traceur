@@ -53,7 +53,7 @@ traceur::Pixel traceur::BasicKernel::shade(const traceur::Hit &hit, const traceu
 		result += blinnPhong(hit, scene, ray, vertexPos, lightDir);
 	}
 	if (recursion < 2) {
-		result += (hit.primitive->material->shininess/100) * reflectionOnly(hit, scene, ray, vertexPos, recursion + 1);
+		result += (hit.primitive->material->shininess/1000) * reflectionOnly(hit, scene, ray, vertexPos, recursion + 1);
 	}
 
 	if (result.x > 1) result.x = 1;
@@ -84,9 +84,9 @@ traceur::Pixel traceur::BasicKernel::blinnPhong(const traceur::Hit &hit, const t
 	halfVector = glm::normalize(halfVector);
 
 	float specularity = std::max(glm::dot(halfVector, hit.normal), 0.0f);
-	specularity = pow(specularity, (hit.primitive->material->shininess/100));
+	specularity = pow(specularity, (hit.primitive->material->shininess/1000));
 
-	return specularity * hit.primitive->material->diffuse;
+	return specularity * hit.primitive->material->specular;
 }
 
 traceur::Pixel traceur::BasicKernel::reflectionOnly(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray, const glm::vec3 &vertexPos, int recursion) const {
@@ -127,7 +127,11 @@ void traceur::BasicKernel::render(const traceur::Scene &scene,
 	traceur::Ray ray;
 	traceur::Pixel pixel;
 
+	//printf("[%6.4f%%]", 00.00);
 	for (int y = 0; y < film.height; y++) {
+		double percent = 100 * y/film.height;
+		//printf("\r[%6.4f%%]", percent);
+
 		for (int x = 0; x < film.width; x++) {
 			ray = camera.rayFrom(glm::vec2(x + offset[0], y + offset[1]));
 			pixel = trace(scene, ray, 0);
