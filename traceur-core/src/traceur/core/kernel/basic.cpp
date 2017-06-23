@@ -34,24 +34,37 @@ traceur::Pixel traceur::BasicKernel::trace(const traceur::Scene &scene,
 {
 	traceur::Hit hit;
 	if (scene.graph->intersect(ray, hit)) {
-		return shade(hit, scene, ray);
+		return shade(hit, scene, ray, i);
 	}
-	return traceur::Pixel();
+	return traceur::Pixel(0,0,0);
 }
 
-traceur::Pixel traceur::BasicKernel::shade(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray) const {
-	traceur::Pixel pixel = traceur::Pixel(0, 0, 0);
+traceur::Pixel traceur::BasicKernel::shade(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray, int recursion) const {
+	traceur::Pixel result = traceur::Pixel(0, 0, 0);
 	glm::vec3 vertexPos = ray.origin + (hit.distance * ray.direction);
 
 	for (int i = 0; i < scene.lights.size(); i++) {
 		glm::vec3 lightDir = scene.lights[i] - vertexPos;
 		lightDir = glm::normalize(lightDir);
-		pixel += hit.primitive->material->ambient;
-		pixel = diffuseOnly(hit, lightDir);
-		pixel += blinnPhong(hit, scene, ray, vertexPos, lightDir);
+		//std::cout << scene.lights[i].x << " " << scene.lights[i].y << " " << scene.lights[i].z << std::endl;
+
+		result += hit.primitive->material->ambient * hit.primitive->material->diffuse;
+		result += diffuseOnly(hit, lightDir);
+		result += blinnPhong(hit, scene, ray, vertexPos, lightDir);
+	}
+	if (recursion < 2) {
+		result += (hit.primitive->material->shininess/100) * reflectionOnly(hit, scene, ray, vertexPos, recursion + 1);
 	}
 
-	return pixel;
+	if (result.x > 1) result.x = 1;
+	if (result.y > 1) result.y = 1;
+	if (result.z > 1) result.z = 1;
+
+	if (result.x < 0) result.x = 0;
+	if (result.y < 0) result.y = 0;
+	if (result.z < 0) result.z = 0;
+
+	return result;
 }
 traceur::Pixel traceur::BasicKernel::diffuseOnly(const traceur::Hit &hit, const glm::vec3 &lightDir) const {
 	float dot = glm::dot(hit.normal, lightDir); // glm::dot(hit.normal, lightDir);
@@ -71,9 +84,30 @@ traceur::Pixel traceur::BasicKernel::blinnPhong(const traceur::Hit &hit, const t
 	halfVector = glm::normalize(halfVector);
 
 	float specularity = std::max(glm::dot(halfVector, hit.normal), 0.0f);
-	specularity = pow(specularity, hit.primitive->material->shininess);
+	specularity = pow(specularity, (hit.primitive->material->shininess/100));
 
-	return specularity * hit.primitive->material->specular;
+	return specularity * hit.primitive->material->diffuse;
+}
+
+traceur::Pixel traceur::BasicKernel::reflectionOnly(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray, const glm::vec3 &vertexPos, int recursion) const {
+	glm::vec3 reflection = ray.direction - (2 * glm::dot(hit.normal, ray.direction) * hit.normal);
+	glm::vec3 vertexPosOffset = vertexPos;
+	glm::vec3 destinationOffset = vertexPos + reflection;
+
+	Offset(&vertexPosOffset, &destinationOffset);
+
+	traceur::Ray newRay = traceur::Ray();
+	newRay.origin = vertexPosOffset;
+	newRay.direction = destinationOffset;
+
+	return trace(scene, newRay, recursion);
+}
+
+void traceur::BasicKernel::Offset(glm::vec3* inter, glm::vec3* dest) const{
+	glm::vec3 vector = (*dest) - (*inter);
+	vector = glm::normalize(vector);
+	vector *= 0.01;
+	*inter += vector;
 }
 
 std::unique_ptr<traceur::Film> traceur::BasicKernel::render(const traceur::Scene &scene,

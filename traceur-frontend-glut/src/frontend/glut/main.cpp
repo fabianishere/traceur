@@ -16,6 +16,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <traceur/core/kernel/basic.hpp>
+#include <traceur/core/kernel/multithreaded.hpp>
 #include <traceur/core/scene/graph/factory.hpp>
 #include <traceur/core/scene/graph/vector.hpp>
 #include <traceur/loader/obj.hpp>
@@ -45,7 +46,8 @@ glm::vec3 testRayOrigin;
 glm::vec3 testRayDestination;
 
 // The rendering kernel to use
-std::unique_ptr<traceur::BasicKernel> kernel;
+//std::unique_ptr<traceur::BasicKernel> kernel;
+std::unique_ptr<traceur::MultithreadedKernel> kernel;
 // The scene we want to render
 std::unique_ptr<traceur::Scene> scene;
 // The scene graph visitor to draw the scene.
@@ -54,7 +56,7 @@ std::unique_ptr<traceur::SceneGraphVisitor> visitor;
 std::unique_ptr<traceur::Exporter> exporter;
 
 // The default model to load
-const std::string DEFAULT_MODEL_PATH = "assets/cube.obj";
+const std::string DEFAULT_MODEL_PATH = "assets/dodge.obj";
 
 // Window settings
 const unsigned int WindowSize_X = 800;  // resolution X
@@ -76,9 +78,9 @@ void init(std::string &path)
 	auto loader = std::make_unique<traceur::ObjLoader>(std::move(factory));
 	printf("[main] Loading model at path \"%s\"\n", path.c_str());
 	scene = loader->load(path);
-	scene->lights = MyLightPositions;
 
-	kernel = std::make_unique<traceur::BasicKernel>();
+	kernel = std::make_unique<traceur::MultithreadedKernel>(std::make_shared<traceur::BasicKernel>(), 8);
+	//kernel = std::make_unique<traceur::BasicKernel>();
 	visitor = std::make_unique<traceur::OpenGLSceneGraphVisitor>();
 	exporter = std::make_unique<traceur::PPMExporter>();
 }
@@ -100,6 +102,7 @@ void render()
 			.perspective(glm::radians(50.f), 1, 0.01, 10);
 
 	scene->camera = camera;
+	scene->lights = MyLightPositions;
 
 	printf("%zu\n", scene->lights.size());
 

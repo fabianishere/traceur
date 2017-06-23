@@ -50,7 +50,7 @@ namespace traceur {
 		 * @param[in] scene The {@link Scene} to gather lights.
 		 * @return The color that has been found.
 		 */
-		traceur::Pixel traceur::BasicKernel::shade(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &) const;
+		traceur::Pixel traceur::BasicKernel::shade(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &, int recursion) const;
 
 		/**
 		 * Color a pixel with a diffuse effect
@@ -68,13 +68,8 @@ namespace traceur {
 		 */
 		traceur::Pixel traceur::BasicKernel::blinnPhong(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray, const glm::vec3 &vertexPos, const glm::vec3 &lightDir) const;
 
-		/**
-		 * Returns the normal of the intersected triangle
-		 *
-		 * @param[in] hit The given hit.
-		 * @return The normal.
-		 */
-		glm::vec3 traceur::BasicKernel::calculateNormal(const traceur::Hit &hit) const;
+		traceur::Pixel traceur::BasicKernel::reflectionOnly(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray, const glm::vec3 &vertexPos, int recursion) const;
+		void traceur::BasicKernel::Offset(glm::vec3* inter, glm::vec3* dest) const;
 
 		/**
 		 * Render the camera view of the given {@link Scene} into a

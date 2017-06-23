@@ -52,7 +52,7 @@ namespace traceur {
 		 * The camera of the scene.
 		 */
 		traceur::Camera camera;
-		0
+		
 		/**
 		 * Construct a {@link Scene} instance.
 		 */
