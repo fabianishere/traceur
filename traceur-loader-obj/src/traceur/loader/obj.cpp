@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -274,6 +274,10 @@ bool traceur::ObjLoader::loadMaterials(const std::string &path, std::map<std::st
 		// Shininess [0..200]
 		else if (strncmp(line, "Ns ", 3) == 0) {
 			sscanf(line, "Ns %f", &f1);
+			// The range of shininess (reflectivty) is between 0 and 1000
+			if (f1 > 0) {
+				f1 = f1 / 1000;
+			}
 			mat.shininess = f1;
 		}
 		else if (strncmp(line, "Ni ", 3) == 0) {
