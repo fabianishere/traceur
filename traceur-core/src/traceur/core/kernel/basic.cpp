@@ -138,7 +138,7 @@ traceur::Pixel traceur::BasicKernel::reflectionOnly(const traceur::Hit &hit, con
 void traceur::BasicKernel::Offset(glm::vec3* inter, glm::vec3* dest) const{
 	glm::vec3 vector = (*dest) - (*inter);
 	vector = glm::normalize(vector);
-	vector *= 0.1;
+	vector *= 0.0001;
 	*inter += vector;
 }
  
