@@ -1,8 +1,0 @@
-﻿  Checking Build System
-  CMake does not need to re-run because C:/Users/robin/traceur/build/CMakeFiles/generate.stamp is up-to-date.
-  CMake does not need to re-run because C:/Users/robin/traceur/build/traceur-core/CMakeFiles/generate.stamp is up-to-date.
-  CMake does not need to re-run because C:/Users/robin/traceur/build/traceur-frontend-glut/CMakeFiles/generate.stamp is up-to-date.
-  CMake does not need to re-run because C:/Users/robin/traceur/build/traceur-frontend-glut/deps/freeglut/freeglut/freeglut/CMakeFiles/generate.stamp is up-to-date.
-  CMake does not need to re-run because C:/Users/robin/traceur/build/traceur-frontend-cli/CMakeFiles/generate.stamp is up-to-date.
-  CMake does not need to re-run because C:/Users/robin/traceur/build/traceur-loader-obj/CMakeFiles/generate.stamp is up-to-date.
-  CMake does not need to re-run because C:/Users/robin/traceur/build/traceur-exporter-ppm/CMakeFiles/generate.stamp is up-to-date.
