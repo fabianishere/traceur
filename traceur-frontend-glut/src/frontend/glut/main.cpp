@@ -56,7 +56,7 @@ std::unique_ptr<traceur::SceneGraphVisitor> visitor;
 std::unique_ptr<traceur::Exporter> exporter;
 
 // The default model to load
-const std::string DEFAULT_MODEL_PATH = "assets/dodge.obj";
+const std::string DEFAULT_MODEL_PATH = "assets/untitled4.obj";
 
 // Window settings
 const unsigned int WindowSize_X = 800;  // resolution X
@@ -79,7 +79,7 @@ void init(std::string &path)
 	printf("[main] Loading model at path \"%s\"\n", path.c_str());
 	scene = loader->load(path);
 
-	kernel = std::make_unique<traceur::MultithreadedKernel>(std::make_shared<traceur::BasicKernel>(), 16);
+	kernel = std::make_unique<traceur::MultithreadedKernel>(std::make_shared<traceur::BasicKernel>(), 8);
 	//kernel = std::make_unique<traceur::BasicKernel>();
 	visitor = std::make_unique<traceur::OpenGLSceneGraphVisitor>();
 	exporter = std::make_unique<traceur::PPMExporter>();
@@ -109,6 +109,8 @@ void render()
 	// Time the ray tracing
 	clock_t begin = std::clock();
 
+	camera.viewport[2] = 1024;
+	camera.viewport[3] = 1024;
 	// Render the scene and capture the result
 	auto result = kernel->render(*scene, camera);
 
@@ -266,7 +268,7 @@ void reshape(int w, int h)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	//glOrtho (-1.1, 1.1, -1.1,1.1, -1000.0, 1000.0);
-	gluPerspective (50, (float)w/h, 0.01, 10);
+	gluPerspective (50, (float)w/h, 0.01, 100);
 	glMatrixMode(GL_MODELVIEW);
 }
 

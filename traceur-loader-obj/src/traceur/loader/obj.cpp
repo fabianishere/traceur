@@ -260,6 +260,7 @@ bool traceur::ObjLoader::loadMaterials(const std::string &path, std::map<std::st
 		else if (strncmp(line, "Kd ", 3) == 0) {
 			sscanf(line, "Kd %f %f %f", &f1, &f2, &f3);
 			mat.diffuse = glm::vec3(f1, f2, f3);
+
 		}
 		// Ambient color
 		else if (strncmp(line, "Ka ", 3) == 0) {

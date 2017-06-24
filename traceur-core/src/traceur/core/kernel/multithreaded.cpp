@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -35,6 +35,9 @@ std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(
 		const traceur::Scene &scene,
 		const traceur::Camera &camera) const
 {
+	printf("%d\n", camera.viewport[2]);
+	printf("%d\n", camera.viewport[3]);
+
 	auto film = std::make_unique<traceur::PartitionedFilm<traceur::DirectFilm>>(
 			camera.viewport[2],
 			camera.viewport[3],
@@ -44,6 +47,9 @@ std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(
 #ifdef USE_THREADING
 	auto tasks = std::vector<std::future<void>>(film->n);
 #endif
+
+	printf("[Multithreaded] Partitions: %d\n", film->n);
+	printf("[%6.4f%%]", 00.00);
 
 	/* Initialise threads */
 	/* TODO Use N threads */
@@ -56,6 +62,7 @@ std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(
 
 #ifdef USE_THREADING
 		tasks[i] = std::async(std::launch::async, [this, &scene, offset, &partition, &camera] {
+			//printf("%d\n", partition.height);
 			this->kernel->render(scene, camera, partition, offset);
 		});
 #else
