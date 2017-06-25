@@ -133,6 +133,11 @@ std::unique_ptr<traceur::KDTreeNode> traceur::KDTreeSceneGraphBuilder::build(
 		node->origin = node->origin + (primitive->midpoint() / (float) primitives.size());
 	}
 
+	/* Do not go deeper than ten nodes */
+	if (depth > 10) {
+		return std::move(node);
+	}
+
 	int axis = static_cast<int>(node->bounding_box().longestAxis());
 	std::vector<std::shared_ptr<traceur::Primitive>> left;
 	std::vector<std::shared_ptr<traceur::Primitive>> right;
@@ -146,25 +151,12 @@ std::unique_ptr<traceur::KDTreeNode> traceur::KDTreeSceneGraphBuilder::build(
 		}
 	}
 
-	if (left.size() == 0 && right.size() > 0) {
-		left = right;
-	}
-	if (right.size() == 0 && left.size() > 0) {
-		right = left;
+	if (left.size() < 5 && right.size() < 5) {
+		return std::move(node);
 	}
 
-	int matches = 0;
-	for (auto &leftPrimitive : left) {
-		for (auto &rightPrimitive : right) {
-			if (leftPrimitive == rightPrimitive)
-				matches++;
-		}
-	}
-
-	if ((float)matches / left.size() < 0.5 && (float)matches / right.size() < 0.5) {
-		node->left = std::move(build(left, depth + 1));
-		node->right = std::move(build(right, depth + 1));
-	}
+	node->left = std::move(build(left, depth + 1));
+	node->right = std::move(build(right, depth + 1));
 	return std::move(node);
 }
 
