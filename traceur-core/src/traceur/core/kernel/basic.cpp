@@ -25,11 +25,6 @@
 #include <traceur/core/kernel/basic.hpp>
 #include <traceur/core/scene/primitive/primitive.hpp>
 
-glm::vec3 offset(glm::vec3 &inter, glm::vec3 &dest)
-{
-	return 0.01f * glm::normalize(dest - inter) + inter;
-}
-
 traceur::Pixel traceur::BasicKernel::shade(const traceur::TracingContext &context,
 										   int depth) const
 {
@@ -46,10 +41,17 @@ traceur::Pixel traceur::BasicKernel::shade(const traceur::TracingContext &contex
 
 	// Only run on reflection modes
 	if (material->illumination_model > 2) {
-		if (depth < 2) {
+		if (depth < 8) {
 			result += material->shininess * reflection(context, depth + 1);
 		}
 	}
+
+    // Only run on refraction modes
+    if (material->illumination_model > 3) {
+        if (depth < 8) {
+            result += material->transparency * refraction(context, depth + 1);
+        }
+    }
 
 	return glm::clamp(result, 0.f, 1.f);
 }
@@ -77,19 +79,52 @@ traceur::Pixel traceur::BasicKernel::specular(const traceur::TracingContext &con
 }
 
 traceur::Pixel traceur::BasicKernel::reflection(const traceur::TracingContext &context,
-												int depth) const
+                                                 int depth) const
 {
-	glm::vec3 reflection = glm::reflect(context.ray.direction, context.hit.normal);
-	glm::vec3 vertexPosOffset = context.hit.position;
-	glm::vec3 destinationOffset = context.hit.position + reflection;
-
-	auto next = traceur::Ray(
-		offset(vertexPosOffset, destinationOffset),
-		destinationOffset
-	);
-	return trace(context.scene, context.camera, next, depth);
+    return reflection(context, depth, context.hit.normal);
 }
 
+traceur::Pixel traceur::BasicKernel::reflection(const traceur::TracingContext &context,
+                                                 int depth, const glm::vec3 &normal) const
+{
+    glm::vec3 newDirection = glm::reflect(context.ray.direction, normal);
+    glm::vec3 newOrigin = context.hit.position + 0.000001f * newDirection;
+
+    auto next = traceur::Ray(newOrigin, newDirection);
+    return trace(context.scene, context.camera, next, depth);
+}
+
+traceur::Pixel traceur::BasicKernel::refraction(const traceur::TracingContext &context,
+                                                int depth) const
+{
+    // eta = refractiveIndex(sourceMaterial) / refractiveIndex(destinationMaterial)
+    float sourceDestRefraction;
+    glm::vec3 refractionNormal;
+    
+    if(glm::dot(context.hit.normal, context.ray.direction) < 0) {
+        // enter material
+        sourceDestRefraction = 1.f / context.hit.primitive->material->optical_density;
+        refractionNormal = context.hit.normal;
+    } else {
+        // exit material
+        sourceDestRefraction = context.hit.primitive->material->optical_density / 1.f;
+        refractionNormal = - context.hit.normal;
+    }
+
+    glm::vec3 newDirection = glm::refract(context.ray.direction, refractionNormal,
+                                        sourceDestRefraction);
+
+    if (isnan(newDirection.x) || isnan(newDirection.y) || isnan(newDirection.z)) {
+        // Full internal ray reflection
+        return reflection(context, depth, refractionNormal);
+    }
+
+    glm::vec3 newOrigin = context.hit.position + 0.000001f * newDirection;
+
+    auto next = traceur::Ray(newOrigin, newDirection);
+    return trace(context.scene, context.camera, next, depth);
+
+}
 
 /*
  * This function is NOT used by the multithreading kernel.
