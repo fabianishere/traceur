@@ -70,8 +70,7 @@ traceur::Pixel traceur::BasicKernel::specular(const traceur::TracingContext &con
 	float angle = std::max(0.f, glm::dot(viewDir, reflection));
 	float intensity = powf(angle, material->shininess * 1000);
 
-	//return intensity * material->specular;
-	return glm::vec3(intensity);
+	return intensity * hit.primitive->material->specular;
 }
 
 traceur::Pixel traceur::BasicKernel::reflection(const traceur::TracingContext &context,
