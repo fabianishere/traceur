@@ -70,7 +70,8 @@ namespace traceur {
 
 		traceur::Pixel traceur::BasicKernel::reflectionOnly(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray, const glm::vec3 &vertexPos, int recursion) const;
 		void traceur::BasicKernel::Offset(glm::vec3* inter, glm::vec3* dest) const;
-		bool traceur::BasicKernel::inShadow(const glm::vec3 &lightDir, const glm::vec3 &vertexPos, const traceur::Scene &scene, const float &distanceToLight) const;
+		float traceur::BasicKernel::lightLevel(const traceur::Light &lightSource, const traceur::Hit &hit, const traceur::Scene &scene) const;
+		float traceur::BasicKernel::localLightLevel(const traceur::Light &lightSource, const traceur::Hit &hit, const traceur::Scene &scene) const;
 
 		/**
 		 * Render the camera view of the given {@link Scene} into a
