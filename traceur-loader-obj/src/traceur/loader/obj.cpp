@@ -284,6 +284,7 @@ bool traceur::ObjLoader::loadMaterials(const std::string &path, std::map<std::st
 			mat.shininess = f1;
 		}
         // Optical density / index of refraction [0.001..10] (n 1.0)
+        // Less than 1.0 produces unrealistic results.
 		else if (strncmp(line, "Ni ", 3) == 0) {
 			sscanf(line, "Ni %f", &f1);
 			mat.optical_density = f1;

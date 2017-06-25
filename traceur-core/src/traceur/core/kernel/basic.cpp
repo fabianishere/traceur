@@ -44,8 +44,11 @@ traceur::Pixel traceur::BasicKernel::shade(const traceur::TracingContext &contex
 		result += specular(context, lightDir);
 	}
 
-	if (depth < 2) {
-		result += material->shininess * reflection(context, depth + 1);
+	// Only run on reflection modes
+	if (material->illumination_model > 2) {
+		if (depth < 2) {
+			result += material->shininess * reflection(context, depth + 1);
+		}
 	}
 
 	return glm::clamp(result, 0.f, 1.f);
