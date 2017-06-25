@@ -99,7 +99,7 @@ traceur::Pixel traceur::BasicKernel::blinnPhong(const traceur::Hit &hit, const t
 
 	float specularity = pow(dot, hit.primitive->material->shininess*1000);
 
-	return traceur::Pixel(specularity, specularity, specularity);
+	return specularity * hit.primitive->material->specular;
 	/*glm::vec3 viewDir = scene.camera.position - vertexPos;
 	viewDir = glm::normalize(viewDir);
 

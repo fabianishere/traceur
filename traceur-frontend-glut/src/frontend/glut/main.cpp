@@ -56,7 +56,7 @@ std::unique_ptr<traceur::SceneGraphVisitor> visitor;
 std::unique_ptr<traceur::Exporter> exporter;
 
 // The default model to load
-const std::string DEFAULT_MODEL_PATH = "assets/untitled4.obj";
+const std::string DEFAULT_MODEL_PATH = "assets/dodge.obj";
 
 // Window settings
 const unsigned int WindowSize_X = 800;  // resolution X
