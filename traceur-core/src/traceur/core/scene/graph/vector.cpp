@@ -65,6 +65,11 @@ void traceur::VectorSceneGraph::accept(traceur::SceneGraphVisitor &visitor) cons
 	}
 }
 
+size_t traceur::VectorSceneGraph::size() const
+{
+	return nodes->size();
+}
+
 void traceur::VectorSceneGraphBuilder::add(const std::shared_ptr<traceur::Primitive> primitive)
 {
 	nodes.push_back(primitive);
