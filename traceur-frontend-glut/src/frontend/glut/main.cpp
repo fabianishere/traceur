@@ -1,4 +1,4 @@
-#ifdef WIN32
+﻿#ifdef WIN32
 #include <windows.h>
 #endif
 
@@ -56,7 +56,7 @@ std::unique_ptr<traceur::OpenGLSceneGraphVisitor> visitor;
 std::unique_ptr<traceur::Exporter> exporter;
 
 // The default model to load
-const std::string DEFAULT_MODEL_PATH = "assets/cube.obj";
+const std::string DEFAULT_MODEL_PATH = "assets/dodge.obj";
 
 // Window settings
 const unsigned int WindowSize_X = 800;  // resolution X
@@ -98,6 +98,7 @@ void render()
 			.lookAt(getCameraPosition(), getCameraDirection(), getCameraUp())
 			.perspective(glm::radians(50.f), 1, 0.01, 10);
 
+	scene->lights = MyLightPositions;
 
 	printf("[main] Rendering scene [%s]\n", kernel->name().c_str());
 

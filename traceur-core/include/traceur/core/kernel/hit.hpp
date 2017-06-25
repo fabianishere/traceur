@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -31,7 +31,7 @@ namespace traceur {
 	class Primitive;
 
 	/**
-	 * A mutable data structure which represents the intersection between a 
+	 * A mutable data structure which represents the intersection between a
 	 * {@link Ray} and a {@link Shape}.
 	 */
 	class Hit {
@@ -44,7 +44,7 @@ namespace traceur {
 		/**
 		 * The distance to the intersection.
 		 */
-		double distance;
+		float distance;
 
 		/**
 		 * The position of the hit within the scene.
@@ -69,7 +69,7 @@ namespace traceur {
 		 * @param[in] position The position of the hit in the scene.
 		 * @param[in] normal The normal of the hit.
 		 */
-		Hit(const traceur::Primitive &primitive, double distance, const glm::vec3 &position, const glm::vec3 &normal)
+		Hit(const traceur::Primitive &primitive, float distance, const glm::vec3 &position, const glm::vec3 &normal)
 			: primitive(&primitive), distance(distance), position(position), normal(normal) {}
 	};
 }
