@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -28,7 +28,7 @@
 
 namespace traceur {
 	/**
-	 * The {@link Material} class contains the information, such as the 
+	 * The {@link Material} class contains the information, such as the
 	 * diffuse, ambient and specular terms of the material.
 	 */
 	class Material {
@@ -57,8 +57,8 @@ namespace traceur {
 		 * @param shininess The specular exponent of the material.
 		 */
 		Material(
-				const glm::vec3 &diffuse, 
-				const glm::vec3 &ambient, 
+				const glm::vec3 &diffuse,
+				const glm::vec3 &ambient,
 				const glm::vec3 &specular,
 				float shininess
 		) :

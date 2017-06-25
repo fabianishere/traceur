@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -50,6 +50,11 @@ namespace traceur {
 		glm::vec3 v;
 
 		/**
+		 * The normal of this triangle.
+		 */
+		glm::vec3 n;
+
+		/**
 		 * Construct a {@link Triangle} instance.
 		 *
 		 * @param[in] origin The first vertex of the triangle.
@@ -61,6 +66,21 @@ namespace traceur {
 			Primitive(origin, material), u(u), v(v), box(Box(material))
 		{
 			box = calculate_bounding_box();
+			n = calculateNormal();
+		}
+
+		inline glm::vec3 calculateNormal() {
+			//glm::vec3 normal = glm::cross(u - origin, v - origin);
+			//glm::vec3 normal = glm::cross(-u - (v-u), v - (v-u));
+			//normal . vertexnormal
+			//	normal = - normal
+			//return glm::vec3(0, 0, 0);
+			//return glm::normalize(normal);
+			glm::vec3 normal = glm::vec3(0, 0, 0);
+			normal.x = u.y*v.z - u.z*v.y;
+			normal.y = u.z*v.x - u.x*v.z;
+			normal.z = u.x*v.y - u.y*v.x;
+			return glm::normalize(normal);
 		}
 
 		/**
@@ -113,7 +133,7 @@ namespace traceur {
 			hit.primitive = this;
 			hit.distance = t;
 			hit.position = p;
-			hit.normal = glm::normalize((ray.origin - origin) + t * ray.direction);
+			hit.normal = n;
 
 			return true;
 		}
