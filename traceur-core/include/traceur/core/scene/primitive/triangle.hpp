@@ -152,12 +152,8 @@ namespace traceur {
 			glm::vec3 min(infinity), max(-infinity);
 
 			for (auto &vertex : {origin, origin + u, origin + v}) {
-				for (int i = 0; i < 3; i++) {
-					if (vertex[i] < min[i])
-						min[i] = vertex[i];
-					if (vertex[i] > max[i])
-						max[i] = vertex[i];
-				}
+				min = glm::min(min, vertex);
+				max = glm::max(max, vertex);
 			}
 			return traceur::Box(min, max, material);
 		}

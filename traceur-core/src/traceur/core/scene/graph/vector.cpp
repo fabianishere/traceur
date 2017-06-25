@@ -68,24 +68,14 @@ void traceur::VectorSceneGraph::accept(traceur::SceneGraphVisitor &visitor) cons
 void traceur::VectorSceneGraphBuilder::add(const std::shared_ptr<traceur::Primitive> primitive)
 {
 	nodes.push_back(primitive);
-
-	for (auto &vertex : {primitive->bounding_box().min,
-						 primitive->bounding_box().max}) {
-
-		for (int i = 0; i < 3; i++) {
-			if (vertex[i] < min[i])
-				min[i] = vertex[i];
-			if (vertex[i] > max[i])
-				max[i] = vertex[i];
-		}
-	}
+	box = box.expand(primitive->bounding_box());
 }
 
 std::unique_ptr<traceur::SceneGraph> traceur::VectorSceneGraphBuilder::build() const
 {
 	return std::make_unique<traceur::VectorSceneGraph>(
 			nodes,
-			traceur::Box(min, max, std::make_shared<traceur::Material>())
+			box
 	);
 }
 

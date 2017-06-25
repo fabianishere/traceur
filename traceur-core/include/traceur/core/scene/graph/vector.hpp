@@ -101,22 +101,15 @@ namespace traceur {
 		 */
 		std::vector<std::shared_ptr<traceur::Primitive>> nodes;
 		/**
-		 * The minimum vertex in the scene.
+		 * The bounding box of the graph.
 		 */
-		glm::vec3 min;
-		/**
-		 * The maximum vertex in the scene.
-		 */
-		glm::vec3 max;
+		traceur::Box box;
 	public:
 		/**
 		 * Construct a {@link VectorSceneGraphBuilder} instance.
 		 */
-		VectorSceneGraphBuilder()
-		{
-			min = glm::vec3(std::numeric_limits<float>::infinity());
-			max = -min;
-		}
+		VectorSceneGraphBuilder() : box(traceur::Box::createBoundingBox()) {}
+
 		/**
 		 * Add a node to the graph of the scene.
 		 *

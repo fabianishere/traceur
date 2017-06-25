@@ -63,6 +63,30 @@ namespace traceur {
 				Primitive((min + max) / 2.f, material), min(min), max(max) {}
 
 		/**
+		 * Construct a {@link Box} as bounding box.
+		 *
+		 * @return The bounding box instance.
+		 */
+		static Box createBoundingBox()
+		{
+			auto min = glm::vec3(std::numeric_limits<float>::infinity());
+			auto max = -min;
+			return createBoundingBox(min, max);
+		}
+
+		/**
+		 * Construct a {@link Box} as bounding box.
+		 *
+		 * @param[in] min The minimum vertex in the box.
+		 * @param[in] max The maximum vertex in the box.
+		 * @return The bounding box instance.
+		 */
+		static Box createBoundingBox(const glm::vec3 &min, const glm::vec3 &max)
+		{
+			return Box(min, max, std::make_shared<traceur::Material>());
+		}
+
+		/**
 		 * Determine whether the given ray intersects the shape.
 		 *
 		 * @param[in] ray The ray to intersect with this shape.
@@ -90,6 +114,18 @@ namespace traceur {
 			hit.distance = tmin;
 			hit.position = ray.origin + tmin * ray.direction;
 			return true;
+		}
+
+		/**
+		 * Expand this {@link Box} with another box.
+		 *
+		 * @param[in] other The other box to expand with.
+		 * @return The next expanded box with the material properties of this
+		 * instance.
+		 */
+		traceur::Box expand(const traceur::Box &other) const
+		{
+			return traceur::Box(glm::min(min, other.min), glm::max(max, other.max), material);
 		}
 
 		/**
