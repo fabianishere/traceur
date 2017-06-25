@@ -51,11 +51,13 @@ traceur::Pixel traceur::BasicKernel::shade(const traceur::Hit &hit, const traceu
 		result += hit.primitive->material->ambient * 0.2f;
 
 		//No diffuse or specular when in a shadow
-		if (inShadow(scene.lights[i], vertexPos, scene, distanceToLight)) {
+
+		if (inShadow(lightDir, vertexPos, scene, distanceToLight)) {
 			continue;
 		}
 		result += diffuseOnly(hit, lightDir);
 		result += blinnPhong(hit, scene, ray, vertexPos, lightDir);
+
 	}
 	if (recursion < 2 && hit.primitive->material->shininess > 0) {
 		result += (hit.primitive->material->shininess) * reflectionOnly(hit, scene, ray, vertexPos, recursion + 1);
@@ -142,10 +144,10 @@ void traceur::BasicKernel::Offset(glm::vec3* inter, glm::vec3* dest) const{
 	*inter += vector;
 }
  
-bool traceur::BasicKernel::inShadow(const glm::vec3 &lightPos, const glm::vec3 &vertexPos, const traceur::Scene &scene, const float &distanceToLight) const{
+bool traceur::BasicKernel::inShadow(const glm::vec3 &lightDir, const glm::vec3 &vertexPos, const traceur::Scene &scene, const float &distanceToLight) const{
 	// Can be optimized by having a different intersect method that returns false upon first impact that is closer than the light.
 	glm::vec3 vertexPosOffset = vertexPos;
-	glm::vec3 destinationOffset = lightPos - vertexPos;
+	glm::vec3 destinationOffset = lightDir;
 	Offset(&vertexPosOffset, &destinationOffset);
 	traceur::Ray newRay = traceur::Ray(vertexPosOffset, glm::normalize(destinationOffset));
 	traceur::Hit newHit;
