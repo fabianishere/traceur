@@ -57,7 +57,7 @@ std::unique_ptr<traceur::OpenGLSceneGraphVisitor> visitor;
 std::unique_ptr<traceur::Exporter> exporter;
 
 // The default model to load
-const std::string DEFAULT_MODEL_PATH = "assets/dodge.obj";
+const std::string DEFAULT_MODEL_PATH = "assets/untitled4.obj";
 
 // Window settings
 const unsigned int WindowSize_X = 800;  // resolution X
@@ -80,7 +80,7 @@ void init(std::string &path)
 	printf("[main] Loading model at path \"%s\"\n", path.c_str());
 	scene = loader->load(path);
 
-	kernel = std::make_unique<traceur::MultithreadedKernel>(std::make_shared<traceur::BasicKernel>(), 16);
+	kernel = std::make_unique<traceur::MultithreadedKernel>(std::make_shared<traceur::BasicKernel>(), 8);
 	visitor = std::make_unique<traceur::OpenGLSceneGraphVisitor>(false);
 	exporter = std::make_unique<traceur::PPMExporter>();
 }
@@ -112,6 +112,7 @@ void render()
 
 	camera.viewport[2] = 1024;
 	camera.viewport[3] = 1024;
+
 	// Render the scene and capture the result
 	auto result = kernel->render(*scene, camera);
 

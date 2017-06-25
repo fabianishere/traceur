@@ -29,14 +29,14 @@
 #include <stdio.h>
 
 traceur::Pixel traceur::BasicKernel::trace(const traceur::Scene &scene,
-										   const traceur::Ray &ray,
-											int i) const
+	const traceur::Ray &ray,
+	int i) const
 {
 	traceur::Hit hit;
 	if (scene.graph->intersect(ray, hit)) {
 		return shade(hit, scene, ray, i);
 	}
-	return traceur::Pixel(0,0,0);
+	return traceur::Pixel(0, 0, 0);
 }
 // TODO: Make 0.2f and 0.8f variables.
 traceur::Pixel traceur::BasicKernel::shade(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray, int recursion) const {
@@ -197,7 +197,7 @@ void traceur::BasicKernel::render(const traceur::Scene &scene,
 	// for performance, loop over y first
 	for (int y = 0; y < film.height; y++) {
 		double percent = 100 * y/film.height;
-		printf("\r[%6.4f%%]", percent);
+	//	printf("\r[%6.4f%%]", percent);
 
 		for (int x = 0; x < film.width; x++) {
 			// create a ray from camera to (x + offsetX, y + offsetY)
@@ -207,7 +207,7 @@ void traceur::BasicKernel::render(const traceur::Scene &scene,
 			// a Pixel is equivalent to a ivec3, containing the color
 			// of the pixel as R,G,B values. The location of the
 			// intersection point is NOT known!
-			pixel = trace(scene, ray);
+			pixel = trace(scene, ray, 0);
 
 			// write the pixel color to the array
 			film(x, y) = pixel;
@@ -223,7 +223,7 @@ void traceur::BasicKernel::render(const traceur::Scene &scene,
  *
  * An empty pixel (0,0,0) is returned when there is no intersection.
 */
-traceur::Pixel traceur::BasicKernel::trace(const traceur::Scene &scene,
+/*traceur::Pixel traceur::BasicKernel::trace(const traceur::Scene &scene,
 											const traceur::Ray &ray) const
 {
 	traceur::Hit hit;
@@ -243,3 +243,4 @@ traceur::Pixel traceur::BasicKernel::trace(const traceur::Scene &scene,
 	// return an empty pixel (0,0,0)
 	return traceur::Pixel();
 }
+*/
