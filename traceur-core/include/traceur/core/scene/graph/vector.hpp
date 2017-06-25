@@ -39,7 +39,7 @@ namespace traceur {
 	 * A {@link SceneGraph> which creates a linear representation of the scene
 	 * in memory.
 	 */
-	class VectorSceneGraph: public SceneGraph {
+	class VectorSceneGraph: public SceneGraph, public Node {
 		/**
 		 * The nodes in the graph.
 		 */
@@ -60,7 +60,7 @@ namespace traceur {
 						 const traceur::Box &box
 		) : box(box),
 			nodes(std::make_unique<std::vector<std::shared_ptr<traceur::Primitive>>>(nodes)) {}
-		
+
 		/**
 		 * Determine whether the given ray intersects a node in the geometry
 		 * of this container.
@@ -74,12 +74,22 @@ namespace traceur {
 		virtual bool intersect(const traceur::Ray &, traceur::Hit &) const final;
 
 		/**
-		 * Accept a {@link SceneGraphVisitor} instance to traverse this scene 
+		 * Accept a {@link SceneGraphVisitor} instance to traverse this scene
 		 * graph.
 		 *
 		 * @param[in] visitor The visitor to accept.
 		 */
-		virtual void traverse(traceur::SceneGraphVisitor &) const final;
+		virtual void accept(traceur::SceneGraphVisitor &) const final;
+
+		/**
+		 * Return the bounding {@link Box} which encapsulates the whole node.
+		 *
+		 * @return A bounding {@link Box} of the node.
+		 */
+		virtual const Box & bounding_box() const final
+		{
+			return box;
+		}
 	};
 
 	/**

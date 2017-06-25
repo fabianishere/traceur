@@ -28,7 +28,7 @@
 
 namespace traceur {
 	/**
-	 * The {@link Material} class contains the information, such as the 
+	 * The {@link Material} class contains the information, such as the
 	 * diffuse, ambient and specular terms of the material.
 	 */
 	class Material {
@@ -36,8 +36,7 @@ namespace traceur {
 		/**
 		 * The diffuse, ambient and specular terms of this material.
 		 */
-		glm::fvec3 diffuse, ambient, specular;
-		//glm::vec3 diffuse, ambient, specular;
+		glm::vec3 diffuse, ambient, specular;
 
 		/**
 		 * The specular exponent of the material.
@@ -58,8 +57,8 @@ namespace traceur {
 		 * @param shininess The specular exponent of the material.
 		 */
 		Material(
-				const glm::vec3 &diffuse, 
-				const glm::vec3 &ambient, 
+				const glm::vec3 &diffuse,
+				const glm::vec3 &ambient,
 				const glm::vec3 &specular,
 				float shininess
 		) :

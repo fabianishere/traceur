@@ -33,7 +33,7 @@
 
 namespace traceur {
 	/**
-	 * This class represents a scene which consists of primitives and lights, 
+	 * This class represents a scene which consists of primitives and lights,
 	 * which can be rendered by a {@link Kernel} instance.
 	 */
 	class Scene {
@@ -49,11 +49,6 @@ namespace traceur {
 		std::vector<traceur::Light> lights;
 
 		/**
-		 * The camera of the scene.
-		 */
-		traceur::Camera camera;
-		
-		/**
 		 * Construct a {@link Scene} instance.
 		 */
 		Scene() {}
@@ -63,7 +58,7 @@ namespace traceur {
 		 *
 		 * @param[in] graph The graph of the scene.
 		 */
-		Scene(std::shared_ptr<traceur::SceneGraph> graph) : 
+		Scene(std::shared_ptr<traceur::SceneGraph> graph) :
 			graph(graph) {}
 
 		/**

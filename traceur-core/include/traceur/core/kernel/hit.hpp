@@ -31,7 +31,7 @@ namespace traceur {
 	class Primitive;
 
 	/**
-	 * A mutable data structure which represents the intersection between a 
+	 * A mutable data structure which represents the intersection between a
 	 * {@link Ray} and a {@link Shape}.
 	 */
 	class Hit {
@@ -45,11 +45,6 @@ namespace traceur {
 		 * The distance to the intersection.
 		 */
 		float distance;
-
-		/**
-		 * The amount of recursions done
-		 */
-		int recursion;
 
 		/**
 		 * The position of the hit within the scene.
@@ -73,10 +68,9 @@ namespace traceur {
 		 * @param[in] distance The distance to the intersection.
 		 * @param[in] position The position of the hit in the scene.
 		 * @param[in] normal The normal of the hit.
-		 * @param[in] recursion The amount of recursions.
 		 */
-		Hit(const traceur::Primitive &primitive, float distance, const glm::vec3 &position, const glm::vec3 &normal, int resursion)
-			: primitive(&primitive), distance(distance), position(position), normal(normal), recursion(recursion) {}
+		Hit(const traceur::Primitive &primitive, float distance, const glm::vec3 &position, const glm::vec3 &normal)
+			: primitive(&primitive), distance(distance), position(position), normal(normal) {}
 	};
 }
 

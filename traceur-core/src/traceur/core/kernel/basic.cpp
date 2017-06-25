@@ -24,110 +24,98 @@
 
 #include <traceur/core/kernel/basic.hpp>
 #include <traceur/core/scene/primitive/primitive.hpp>
-#include <algorithm>
-#include <iostream>
-#include <stdio.h>
 
-traceur::Pixel traceur::BasicKernel::trace(const traceur::Scene &scene,
-										   const traceur::Ray &ray,
-											int i) const
+glm::vec3 offset(glm::vec3 &inter, glm::vec3 &dest)
 {
-	traceur::Hit hit;
-	if (scene.graph->intersect(ray, hit)) {
-		return shade(hit, scene, ray, i);
-	}
-	return traceur::Pixel(0,0,0);
+	return 0.01f * glm::normalize(dest - inter) + inter;
 }
 
-traceur::Pixel traceur::BasicKernel::shade(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray, int recursion) const {
-	traceur::Pixel result = traceur::Pixel(0, 0, 0);
-	glm::vec3 vertexPos = ray.origin + (hit.distance * ray.direction);
+traceur::Pixel traceur::BasicKernel::shade(const traceur::TracingContext &context,
+										   int depth) const
+{
+	auto result = traceur::Pixel(0, 0, 0);
+	auto &material = context.hit.primitive->material;
 
-	for (int i = 0; i < scene.lights.size(); i++) {
-		glm::vec3 lightDir = scene.lights[i] - vertexPos;
-		lightDir = glm::normalize(lightDir);
-		//std::cout << scene.lights[i].x << " " << scene.lights[i].y << " " << scene.lights[i].z << std::endl;
+	for (auto &light : context.scene.lights) {
+		auto lightDir = glm::normalize(light - context.hit.position);
 
-		result += hit.primitive->material->ambient * hit.primitive->material->diffuse;
-		result += diffuseOnly(hit, lightDir);
-		result += blinnPhong(hit, scene, ray, vertexPos, lightDir);
-	}
-	if (recursion < 2) {
-		result += (hit.primitive->material->shininess) * reflectionOnly(hit, scene, ray, vertexPos, recursion + 1);
+		result += material->ambient * 0.2f;
+		result += diffuse(context, lightDir);
+		result += specular(context, lightDir);
 	}
 
-	if (result.x > 1) result.x = 1;
-	if (result.y > 1) result.y = 1;
-	if (result.z > 1) result.z = 1;
-
-	if (result.x < 0) result.x = 0;
-	if (result.y < 0) result.y = 0;
-	if (result.z < 0) result.z = 0;
-
-	return result;
-}
-traceur::Pixel traceur::BasicKernel::diffuseOnly(const traceur::Hit &hit, const glm::vec3 &lightDir) const {
-	float dot = glm::dot(hit.normal, lightDir); // glm::dot(hit.normal, lightDir);
-	if (dot < 0.0f) dot = 0.0f;
-
-	//else printf("%f\n", dot);
-	//auto x = hit.primitive->material->diffuse;
-	//std::cout << dot << " " << lightDir.y << " " << lightDir.z << std::endl;
-	return hit.primitive->material->diffuse * dot;
-}
-
-traceur::Pixel traceur::BasicKernel::blinnPhong(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray, const glm::vec3 &vertexPos, const glm::vec3 &lightDir) const {
-	glm::vec3 viewDir = scene.camera.position - vertexPos;
-	viewDir = glm::normalize(viewDir);
-
-	float specularity = 0.0f;
-	if (glm::dot(hit.normal, lightDir) > 0) {
-		glm::vec3 halfVector = glm::normalize(lightDir + viewDir);
-		specularity = pow(glm::dot(hit.normal, halfVector), hit.primitive->material->shininess*1000);
+	if (depth < 2) {
+		result += material->shininess * reflection(context, depth + 1);
 	}
-	return hit.primitive->material->specular * specularity * hit.primitive->material->diffuse;
-	/*glm::vec3 halfVector = viewDir + lightDir;
-	halfVector = glm::normalize(halfVector);
 
-	float specularity = std::max(glm::dot(halfVector, hit.normal), 0.0f);
-	if (specularity > 0) {
-		specularity = pow(specularity, (hit.primitive->material->shininess));
-		return specularity * hit.primitive->material->specular;
-	}
-	return traceur::Pixel(0, 0, 0);*/
-
+	return glm::clamp(result, 0.f, 1.f);
+}
+traceur::Pixel traceur::BasicKernel::diffuse(const traceur::TracingContext &context,
+											 const glm::vec3 &lightDir) const
+{
+	float intensity = std::max(0.f, glm::dot(context.hit.normal, lightDir));
+	return intensity * context.hit.primitive->material->diffuse;
 }
 
-traceur::Pixel traceur::BasicKernel::reflectionOnly(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray, const glm::vec3 &vertexPos, int recursion) const {
-	glm::vec3 reflection = ray.direction - (2 * glm::dot(hit.normal, ray.direction) * hit.normal);
-	glm::vec3 vertexPosOffset = vertexPos;
-	glm::vec3 destinationOffset = vertexPos + reflection;
+traceur::Pixel traceur::BasicKernel::specular(const traceur::TracingContext &context,
+											  const glm::vec3 &lightDir) const
+{
+	auto &ray = context.ray;
+	auto &hit = context.hit;
+	auto &material = hit.primitive->material;
 
-	Offset(&vertexPosOffset, &destinationOffset);
+	auto viewDir = glm::normalize(context.ray.origin - hit.position);
+	auto reflection = glm::reflect(context.ray.direction, hit.normal);
 
-	traceur::Ray newRay = traceur::Ray();
-	newRay.origin = vertexPosOffset;
-	newRay.direction = destinationOffset;
+	float angle = std::max(0.f, glm::dot(viewDir, reflection));
+	float intensity = powf(angle, material->shininess * 1000);
 
-	return trace(scene, newRay, recursion);
+	//return intensity * material->specular;
+	return glm::vec3(intensity);
 }
 
-void traceur::BasicKernel::Offset(glm::vec3* inter, glm::vec3* dest) const{
-	glm::vec3 vector = (*dest) - (*inter);
-	vector = glm::normalize(vector);
-	vector *= 0.01;
-	*inter += vector;
+traceur::Pixel traceur::BasicKernel::reflection(const traceur::TracingContext &context,
+												int depth) const
+{
+	glm::vec3 reflection = glm::reflect(context.ray.direction, context.hit.normal);
+	glm::vec3 vertexPosOffset = context.hit.position;
+	glm::vec3 destinationOffset = context.hit.position + reflection;
+
+	auto next = traceur::Ray(
+		offset(vertexPosOffset, destinationOffset),
+		destinationOffset
+	);
+	return trace(context.scene, context.camera, next, depth);
 }
 
+
+/*
+ * This function is NOT used by the multithreading kernel.
+*/
 std::unique_ptr<traceur::Film> traceur::BasicKernel::render(const traceur::Scene &scene,
 															const traceur::Camera &camera) const
 {
-	auto film = std::make_unique<traceur::DirectFilm>(camera.viewport[2],
-													  camera.viewport[3]);
+	// the default camera viewport is a vec4 in the following format;
+	// ivec4(0, 0, viewWidth, viewHeight)
+	int width = camera.viewport.z;
+	int height = camera.viewport.w;
+
+	// create a unique instance of the DirectFilm given the width and height
+	auto film = std::make_unique<traceur::DirectFilm>(width, height);
+
+	// film is a pointer, so pass the reference using the *
+	// call the render function with offset(0,0), the multithreading
+	// kernel will pass different values here
 	render(scene, camera, *film, glm::ivec2());
+
+	// return the film and move the responsibility of deallocation
+	// to the caller using std::move
 	return std::move(film);
 }
 
+/*
+* This function is used by the multithreading kernel.
+*/
 void traceur::BasicKernel::render(const traceur::Scene &scene,
 								  const traceur::Camera &camera,
 								  traceur::Film &film,
@@ -136,15 +124,49 @@ void traceur::BasicKernel::render(const traceur::Scene &scene,
 	traceur::Ray ray;
 	traceur::Pixel pixel;
 
-	//printf("[%6.4f%%]", 00.00);
+	// loop through all pixels on the film
+	// for performance, loop over y first
 	for (int y = 0; y < film.height; y++) {
-		double percent = 100 * y/film.height;
-		//printf("\r[%6.4f%%]", percent);
-
 		for (int x = 0; x < film.width; x++) {
-			ray = camera.rayFrom(glm::vec2(x + offset[0], y + offset[1]));
-			pixel = trace(scene, ray, 0);
+			// create a ray from camera to (x + offsetX, y + offsetY)
+			ray = camera.rayFrom(glm::ivec2(x, y) + offset);
+
+			// trace the ray through the scene, this returns a Pixel.
+			// a Pixel is equivalent to a ivec3, containing the color
+			// of the pixel as R,G,B values. The location of the
+			// intersection point is NOT known!
+			pixel = trace(scene, camera, ray, 0);
+
+			// write the pixel color to the array
 			film(x, y) = pixel;
 		}
 	}
+}
+
+/*
+ * This function is responsible for the tracing of a Ray through a Scene.
+ *
+ * This function only returns the color of the point of intersection with
+ * the nearest object. The location of the intersection is not returned.
+ *
+ * An empty pixel (0,0,0) is returned when there is no intersection.
+*/
+traceur::Pixel traceur::BasicKernel::trace(const traceur::Scene &scene,
+										   const traceur::Camera &camera,
+										   const traceur::Ray &ray,
+										   int depth) const
+{
+	traceur::Hit hit;
+	// Find the intersection of ray with the nearest object.
+	// The nearest object is stored in hit. The function intersect
+	// returns true if there is an intersection, false otherwise.
+	if (scene.graph->intersect(ray, hit)) {
+		// hit.primitive returns the type, so for example a triangle,
+		// sphere, etc... This object has a material. The material
+		// contains the diffuse, Kd, Ks and shininess values.
+		return shade(traceur::TracingContext(scene, camera, ray, hit), depth);
+	}
+
+	// return an empty pixel (0,0,0)
+	return traceur::Pixel();
 }

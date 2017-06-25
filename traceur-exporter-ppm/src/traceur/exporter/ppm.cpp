@@ -28,6 +28,7 @@
 void traceur::PPMExporter::write(const traceur::Film &film,
 								 const std::string &path) const
 {
+	/* Open file as binary on Windows (see #42) */
 	auto file = fopen(path.c_str(), "wb");
 
 	if (!file) {
@@ -36,21 +37,23 @@ void traceur::PPMExporter::write(const traceur::Film &film,
 		return;
 	}
 
-	static char rgb[3];
+	traceur::Pixel pixel;
+	static unsigned char color[3];
 
 	// Write file header
-	fprintf(file, "P6\n%lu %lu\n255\n", film.width, film.height);
+	fprintf(file, "P6\n%i %i\n255\n", (int) film.width, (int) film.height);
+
 	// Write the pixels
 	for (int y = 0; y < film.height; y++) {
 		for (int x = 0; x < film.width; x++) {
 			/* film origin is bottom-left, while ppm is top-left */
-			auto pixel = film(x, film.height - y - 1) * 255.0f;
+			pixel = film(x, film.height - y - 1) * 255.f;
 
-			rgb[0] = (unsigned char) pixel[0];
-			rgb[1] = (unsigned char) pixel[1];
-			rgb[2] = (unsigned char) pixel[2];
-			
- 			fwrite(rgb, 3, 1, file);
+			color[0] = (unsigned char) pixel[0];
+			color[1] = (unsigned char) pixel[1];
+			color[2] = (unsigned char) pixel[2];
+
+			fwrite(color, sizeof(unsigned char), sizeof(color), file);
 		}
 	}
 	// Close the file

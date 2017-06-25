@@ -29,47 +29,101 @@
 
 namespace traceur {
 	/**
-	 * A basic CPU raytracing {@link Kernel} that provides no optimizations and
-	 * only implements ambient shading.
+	 * This struct represents the ray-tracing context of the kernel.
+	 */
+	struct TracingContext {
+		/**
+		 * The {@link Scene} that is being rendered.
+		 */
+		const traceur::Scene &scene;
+
+		/**
+		 * The {@link Camera} that is being used to render the scene.
+		 */
+		const traceur::Camera &camera;
+
+		/**
+		 * The {@link Ray} that is being traced into the scene.
+		 */
+		const traceur::Ray &ray;
+
+		/**
+		 * The {@link Hit} with a node.
+		 */
+		const traceur::Hit &hit;
+
+		/**
+		 * Construct a {@link TracingContext}
+		 *
+		 * @param[in] scene The scene of this context.
+		 * @param[in] camera The camera of this context.
+		 * @param[in] ray The ray that is being traced into the scene.
+		 * @param[in] hit The hit that occured.
+		 */
+		TracingContext(const traceur::Scene &scene,
+					   const traceur::Camera &camera,
+					   const traceur::Ray &ray,
+					   const traceur::Hit &hit) : scene(scene), camera(camera), ray(ray), hit(hit) {}
+	};
+
+	/**
+	 * A basic CPU raytracing {@link Kernel}.
 	 */
 	class BasicKernel: public Kernel {
 	public:
 		/**
 		 * Trace a single ray into the {@link Scene}.
 		 *
-		 * @param[in] scene The {@link Scene} to trace the ray into.
-		 * @param[in] ray The {@link Ray} to trace into the scene.
+		 * @param[in] scene The scene to trace the ray into.
+		 * @param[in] camera The camera that captures the scene.
+		 * @param[in] ray The ray that is traced.
+		 * @param[in] depth The depth of the recursion.
 		 * @return The color that has been found by the kernel.
 		 */
-		traceur::Pixel trace(const traceur::Scene &, const traceur::Ray &, int i) const;
+		traceur::Pixel trace(const traceur::Scene &,
+							 const traceur::Camera &,
+							 const traceur::Ray &,
+							 int) const;
 
 		/**
-		 * Color a pixel with a given hit.
+		 * Shade a pixel with a given {@link Hit}.
 		 *
-		 * @param[in] hit The given hit.
+		 * @param[in] context The context within we are shading.
 		 * @param[in] scene The {@link Scene} to gather lights.
 		 * @return The color that has been found.
 		 */
-		traceur::Pixel traceur::BasicKernel::shade(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &, int recursion) const;
+		traceur::Pixel shade(const traceur::TracingContext &, int) const;
 
 		/**
-		 * Color a pixel with a diffuse effect
+		 * Calculate the diffuse effect for the given hit, given the direction
+		 * of a light.
 		 *
-		 *
+		 * @param[in] context The context within we are shading.
+		 * @param[in] lightDir The direction of the light.
+		 * @return The result of the diffuse effect.
 		 */
-		traceur::Pixel traceur::BasicKernel::diffuseOnly(const traceur::Hit &hit, const glm::vec3 &lightDir) const;
+		traceur::Pixel diffuse(const traceur::TracingContext &,
+							   const glm::vec3 &) const;
 
 		/**
-		 * Returns a colored pixel with blinnPhong shading applied.
+		 * Calculate the Blinn-Phong specularity for the given light.
 		 *
-		 * @param[in] hit The given hit.
-		 * @param[in] scene The {@link Scene} to gather lights.
-		 * @return The colored pixel.
+		 * @param[in] context The context within we are shading.
+		 * @param[in] lightDir The direction of the light.
+		 * @return The result of the specular effect.
 		 */
-		traceur::Pixel traceur::BasicKernel::blinnPhong(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray, const glm::vec3 &vertexPos, const glm::vec3 &lightDir) const;
+		traceur::Pixel specular(const traceur::TracingContext &,
+								const glm::vec3 &) const;
 
-		traceur::Pixel traceur::BasicKernel::reflectionOnly(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray, const glm::vec3 &vertexPos, int recursion) const;
-		void traceur::BasicKernel::Offset(glm::vec3* inter, glm::vec3* dest) const;
+		/**
+		 * Calculate the reflection effect for the given tracing context.
+		 *
+		 * @param[in] context The context within we are shading.
+		 * @param[in] depth The depth of the recursion.
+		 * @return The result of the reflection effect.
+		 */
+		traceur::Pixel reflection(const traceur::TracingContext &,
+								  int depth) const;
 
 		/**
 		 * Render the camera view of the given {@link Scene} into a

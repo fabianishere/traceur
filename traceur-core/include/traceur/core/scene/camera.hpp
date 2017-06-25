@@ -53,8 +53,6 @@ namespace traceur {
 		 */
 		glm::vec3 position;
 
-		Camera() {}
-
 		/**
 		 * Construct a {@link Camera} instance.
 		 *
