@@ -43,7 +43,7 @@ namespace traceur {
 		/**
 		 * The nodes in the graph.
 		 */
-		const std::unique_ptr<std::vector<std::shared_ptr<traceur::Primitive>>> nodes;
+		const std::vector<std::shared_ptr<traceur::Primitive>> nodes;
 
 		/**
 		 * The bounding box of this graph.
@@ -58,8 +58,7 @@ namespace traceur {
 		 */
 		VectorSceneGraph(const std::vector<std::shared_ptr<traceur::Primitive>> &nodes,
 						 const traceur::Box &box
-		) : box(box),
-			nodes(std::make_unique<std::vector<std::shared_ptr<traceur::Primitive>>>(nodes)) {}
+		) : box(box), nodes(nodes) {}
 
 		/**
 		 * Determine whether the given ray intersects a node in the geometry
@@ -97,9 +96,10 @@ namespace traceur {
 	 */
 	class VectorSceneGraphBuilder: public SceneGraphBuilder {
 		/**
-		 * The current nodes in the partial graph.
+		 * The nodes in the graph.
 		 */
 		std::vector<std::shared_ptr<traceur::Primitive>> nodes;
+
 		/**
 		 * The bounding box of the graph.
 		 */

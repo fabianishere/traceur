@@ -37,7 +37,7 @@ inline bool traceur::VectorSceneGraph::intersect(const traceur::Ray &ray, traceu
 	double dist = std::numeric_limits<double>::infinity();
 	bool intersection = false;
 
-	for (auto &primitive : *nodes) {
+	for (auto &primitive : nodes) {
 		/* Test if ray intersects bounding box of primitive */
 		if (!primitive->bounding_box().intersect(ray, hit)) {
 			continue;
@@ -60,7 +60,7 @@ void traceur::VectorSceneGraph::accept(traceur::SceneGraphVisitor &visitor) cons
 	/* Visit the root node */
 	visitor.visit(*this);
 
-	for (auto &primitive : *nodes) {
+	for (auto &primitive : nodes) {
 		primitive->accept(visitor);
 	}
 }
