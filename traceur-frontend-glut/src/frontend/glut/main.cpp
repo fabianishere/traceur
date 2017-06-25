@@ -41,7 +41,7 @@ std::unique_ptr<traceur::OpenGLSceneGraphVisitor> visitor;
 std::unique_ptr<traceur::Exporter> exporter;
 
 // Test rays
-std::vector<std::tuple<glm::vec3, glm::vec3, int>> rays;
+std::vector<std::tuple<glm::vec3, glm::vec3, const traceur::Primitive *, int>> rays;
 
 // The default model to load
 const std::string DEFAULT_MODEL_PATH = "assets/dodge.obj";
@@ -134,9 +134,13 @@ void draw()
 	glDisable(GL_LIGHTING);
 	glBegin(GL_LINES);
 		for (auto &ray : rays) {
-			glColor3f(0, 1, 1);
+			auto primitive = std::get<2>(ray);
+			if (primitive) {
+				glColor3fv(glm::value_ptr(primitive->material->diffuse));
+			} else {
+				glColor3f(0, 1, std::get<3>(ray) / 25);
+			}
 			glVertex3fv(glm::value_ptr(std::get<0>(ray)));
-			glColor3f(0, 1, std::get<2>(ray) / 25);
 			glVertex3fv(glm::value_ptr(std::get<1>(ray)));
 		}
 	glEnd();
@@ -292,7 +296,7 @@ void computeReflection(const traceur::Ray &ray, const traceur::Hit &hit, int dep
 
 	// Also show reflection rays that do not intersect a primitive
 	if (!intersects) {
-		rays.push_back({hit.position, hit.position + reflect, depth + 1});
+		rays.push_back({hit.position, hit.position + reflect, hit.primitive, depth + 1});
 	}
 }
 
@@ -327,8 +331,7 @@ void computeRefraction(const traceur::Ray &ray, const traceur::Hit &hit, int dep
 		next.normal = refractionNormal;
 		return computeReflection(ray, next, depth + 1);
 	}
-
-	rays.push_back({hit.position, hit.position +  0.000001f * refract});
+	rays.push_back({hit.position, hit.position +  0.000001f * refract, hit.primitive, depth});
 }
 
 /**
@@ -348,7 +351,7 @@ bool computeTestRays(const traceur::Ray &ray, int depth)
 
 	traceur::Hit hit;
 	if (scene->graph->intersect(ray, hit)) {
-		rays.push_back({ray.origin, hit.position, depth});
+		rays.push_back({ray.origin, hit.position, hit.primitive, depth});
 		computeReflection(ray, hit, depth);
 		computeRefraction(ray, hit, depth);
 		return true;
