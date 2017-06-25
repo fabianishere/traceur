@@ -102,7 +102,7 @@ void render()
 	glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
 
 	// Set up the camera
-	traceur::Camera camera = traceur::Camera(glm::ivec4(0, 0, 800, 1647))
+	traceur::Camera camera = traceur::Camera(viewport)
 			.lookAt(getCameraPosition(), getCameraDirection(), getCameraUp())
 			.perspective(glm::radians(50.f), 1, 0.01, 10);
 
