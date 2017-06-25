@@ -13,6 +13,7 @@
 #include <chrono>
 #include <memory>
 #include <tuple>
+#include <thread>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -64,7 +65,14 @@ void init(std::string &path)
 	scene->lights.push_back(getCameraPosition());
 	printf("[main] Loaded scene with %zu nodes\n", scene->graph->size());
 
-	kernel = std::make_unique<traceur::MultithreadedKernel>(std::make_shared<traceur::BasicKernel>(), 16);
+	int threads = std::thread::hardware_concurrency();
+	int partitions = 64;
+
+	kernel = std::make_unique<traceur::MultithreadedKernel>(
+		std::make_shared<traceur::BasicKernel>(),
+		threads,
+		partitions
+	);
 	visitor = std::make_unique<traceur::OpenGLSceneGraphVisitor>(false);
 	exporter = std::make_unique<traceur::PPMExporter>();
 }
