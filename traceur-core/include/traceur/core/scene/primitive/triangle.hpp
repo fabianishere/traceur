@@ -93,6 +93,31 @@ namespace traceur {
 		 */
 		inline virtual bool intersect(const traceur::Ray &ray, traceur::Hit &hit) const final
 		{
+			auto p = glm::cross(ray.direction, v);
+			float det = glm::dot(u, p);
+
+			if (det < 1e-8 && det > -1e-8) {
+				return false;
+			}
+
+			float inverseDet = 1 / det;
+
+			glm::vec3 t = ray.origin - origin;
+			float left = glm::dot(t, p) * inverseDet;
+			if (left < 0 || left > 1) {
+				return false;
+			}
+			glm::vec3 q = glm::cross(t, u);
+			float right = glm::dot(ray.direction, q) * inverseDet;
+			if (right < 0 || (left + right) > 1) {
+				return false;
+			}
+			hit.primitive = this;
+			hit.distance = glm::dot(v, q) * inverseDet;
+			hit.position = hit.distance * ray.direction;
+			hit.normal = n;
+			return true;
+			/*
 			// Compute the plane's normal
 			auto N = glm::cross(u, v);
 
@@ -135,7 +160,7 @@ namespace traceur {
 			hit.position = p;
 			hit.normal = n;
 
-			return true;
+			return true;*/
 		}
 
 		/**

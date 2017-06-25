@@ -145,12 +145,12 @@ void traceur::BasicKernel::Offset(glm::vec3* inter, glm::vec3* dest) const{
 bool traceur::BasicKernel::inShadow(const glm::vec3 &lightPos, const glm::vec3 &vertexPos, const traceur::Scene &scene, const float &distanceToLight) const{
 	// Can be optimized by having a different intersect method that returns false upon first impact that is closer than the light.
 	glm::vec3 vertexPosOffset = vertexPos;
-	glm::vec3 destinationOffset = lightPos;
+	glm::vec3 destinationOffset = lightPos - vertexPos;
 	Offset(&vertexPosOffset, &destinationOffset);
-	traceur::Ray newRay = traceur::Ray(vertexPosOffset, lightPos);
+	traceur::Ray newRay = traceur::Ray(vertexPosOffset, glm::normalize(destinationOffset));
 	traceur::Hit newHit;
-	if (scene.graph->intersect(newRay, newHit) && newHit.distance < distanceToLight) {
-		return true;
+	if (scene.graph->intersect(newRay, newHit)) {
+		return newHit.distance < distanceToLight;
 	}
 	return false;
 }
