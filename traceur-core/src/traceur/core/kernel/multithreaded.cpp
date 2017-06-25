@@ -42,17 +42,14 @@ std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(
 	);
 
 #ifdef USE_THREADING
-	auto tasks = std::vector<std::future<void>>(film->n);
+	auto tasks = std::vector<std::future<void>>(static_cast<unsigned long>(film->n));
 #endif
 
 	/* Initialise threads */
 	/* TODO Use N threads */
 	for (int i = 0; i < film->n; i++) {
-		auto &partition = (*film)(i);
-		auto offset = glm::ivec2(
-				(i * partition.width) % film->width,
-				(i / film->columns) * partition.height
-		);
+		auto &partition = film->operator()(i);
+		auto offset = film->offset(i);
 
 #ifdef USE_THREADING
 		tasks[i] = std::async(std::launch::async, [this, &scene, offset, &partition, &camera] {
