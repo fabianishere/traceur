@@ -12,6 +12,7 @@
 #include <ctime>
 #include <chrono>
 #include <memory>
+#include <tuple>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -25,26 +26,10 @@
 
 #include <traceur/frontend/glut/visitor.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include "traqueboule.h"
 
-// This is the main application
-// Most of the code in here, does not need to be modified.
-// It is enough to take a look at the function "drawFrame",
-// in case you want to provide your own different drawing functions
-glm::vec3 MyCameraPosition;
-
-// MyLightPositions stores all the light positions to use
-// for the ray tracing. Please notice, the light that is
-// used for the real-time rendering is NOT one of these,
-// but following the camera instead.
-std::vector<glm::vec3> MyLightPositions;
-
-//temporary variables
-//these are only used to illustrate
-//a simple debug drawing. A ray
-glm::vec3 testRayOrigin;
-glm::vec3 testRayDestination;
 
 // The rendering kernel to use
 std::unique_ptr<traceur::MultithreadedKernel> kernel;
@@ -54,6 +39,9 @@ std::unique_ptr<traceur::Scene> scene;
 std::unique_ptr<traceur::OpenGLSceneGraphVisitor> visitor;
 // The exporter we use to export the result
 std::unique_ptr<traceur::Exporter> exporter;
+
+// Test rays
+std::vector<std::tuple<glm::vec3, glm::vec3, int>> rays;
 
 // The default model to load
 const std::string DEFAULT_MODEL_PATH = "assets/cube.obj";
@@ -69,15 +57,11 @@ const unsigned int WindowSize_Y = 800;  // resolution Y
  */
 void init(std::string &path)
 {
-	//one first move: initialize the first light source
-	//at least ONE light source has to be in the scene!!!
-	//here, we set it to the current location of the camera
-	MyLightPositions.push_back(MyCameraPosition);
-
 	auto factory = traceur::make_factory<traceur::VectorSceneGraphBuilder>();
 	auto loader = std::make_unique<traceur::ObjLoader>(std::move(factory));
 	printf("[main] Loading model at path \"%s\"\n", path.c_str());
 	scene = loader->load(path);
+	scene->lights.push_back(getCameraPosition());
 	printf("[main] Loaded scene with %zu nodes\n", scene->graph->size());
 
 	kernel = std::make_unique<traceur::MultithreadedKernel>(std::make_shared<traceur::BasicKernel>(), 16);
@@ -136,8 +120,9 @@ void draw()
 	glColor3f(1,1,1);
 	glPointSize(10);
 	glBegin(GL_POINTS);
-	for (int i = 0; i < MyLightPositions.size(); ++i)
-		glVertex3fv(glm::value_ptr(MyLightPositions[i]));
+		for (auto &light : scene->lights) {
+			glVertex3fv(glm::value_ptr(light));
+		}
 	glEnd();
 	glPopAttrib();//restore all GL attributes
 	//The Attrib commands maintain the state.
@@ -149,14 +134,18 @@ void draw()
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	glDisable(GL_LIGHTING);
 	glBegin(GL_LINES);
-	glColor3f(0,1,1);
-	glVertex3f(testRayOrigin[0], testRayOrigin[1], testRayOrigin[2]);
-	glColor3f(0,0,1);
-	glVertex3f(testRayDestination[0], testRayDestination[1], testRayDestination[2]);
+		for (auto &ray : rays) {
+			glColor3f(0, 1, 1);
+			glVertex3fv(glm::value_ptr(std::get<0>(ray)));
+			glColor3f(0, 1, std::get<2>(ray) / 25);
+			glVertex3fv(glm::value_ptr(std::get<1>(ray)));
+		}
 	glEnd();
 	glPointSize(10);
 	glBegin(GL_POINTS);
-	glVertex3fv(glm::value_ptr(MyLightPositions[0]));
+		for (auto &light : scene->lights) {
+			glVertex3fv(glm::value_ptr(light));
+		}
 	glEnd();
 	glPopAttrib();
 }
@@ -166,7 +155,6 @@ void draw()
  */
 void animate()
 {
-	MyCameraPosition = getCameraPosition();
 	glutPostRedisplay();
 }
 
@@ -199,7 +187,6 @@ int main(int argc, char** argv)
 	glTranslatef(0, 0, -4);
 	tbInitTransform();     // This is for the trackball, please ignore
 	tbHelp();             // idem
-	MyCameraPosition = getCameraPosition();
 
 	// Activate the light following the camera
 	glEnable(GL_LIGHTING);
@@ -283,8 +270,39 @@ void produceRay(int x_I, int y_I, glm::vec3 &origin, glm::vec3 &destination)
 	glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
 	int y_new = viewport[3] - y_I;
 	origin = glm::unProject(glm::vec3(x_I, y_new, 0), model, projection, viewport);
-	destination = glm::unProject(glm::vec3(x_I, y_new, 0), model, projection,
-						  viewport);
+	destination = glm::unProject(glm::vec3(x_I, y_new, 1), model, projection, viewport);
+}
+
+/**
+ * Computes the test rays to draw given a ray.
+ *
+ * @param[in] ray The ray to use.
+ * @param[in] depth The depth of the recursion.
+ */
+void computeTestRays(const traceur::Ray &ray, int depth)
+{
+	traceur::Hit hit;
+	if (scene->graph->intersect(ray, hit)) {
+		rays.push_back({ray.origin, hit.position, depth});
+
+		auto reflect = glm::reflect(ray.direction, hit.normal);
+		rays.push_back({hit.position, hit.position - reflect, depth + 1});
+	}
+}
+
+/**
+ * Computes the test rays for the given position of the screen.
+ *
+ * @param[in] x The x-coordinate on the screen.
+ * @param[in] y The y-coordinate on the screen.
+ */
+void computeTestRays(int x, int y)
+{
+	glm::vec3 origin, destination;
+	// Produce the ray for the current mouse position
+	produceRay(x, y, origin, destination);
+	rays.clear();
+	computeTestRays(traceur::Ray(origin, destination - origin), 0);
 }
 
 /**
@@ -295,10 +313,10 @@ void keyboard(unsigned char key, int x, int y)
     switch (key) {
 	case 'L':
 		// Add/update a light based on the camera position.
-		MyLightPositions.push_back(getCameraPosition());
+		scene->lights.push_back(getCameraPosition());
 		break;
 	case 'l':
-		MyLightPositions[MyLightPositions.size() - 1] = getCameraPosition();
+		scene->lights[scene->lights.size() - 1] = getCameraPosition();
 		break;
 	case 'r':
 		// Render the current scene
@@ -308,11 +326,12 @@ void keyboard(unsigned char key, int x, int y)
 		// Enable/disable bounding boxes visuals
 		visitor->draw_bounding_box = !visitor->draw_bounding_box;
 		break;
+	case 't':
+		// Draw test ray
+		computeTestRays(x, y);
+		break;
 	case 27:
 		exit(0);
 	}
-
-	// Produce the ray for the current mouse position
-	produceRay(x, y, testRayOrigin, testRayDestination);
 }
 
