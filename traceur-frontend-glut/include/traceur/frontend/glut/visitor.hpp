@@ -36,10 +36,25 @@ namespace traceur {
 	class OpenGLSceneGraphVisitor: public SceneGraphVisitor {
 	public:
 		/**
-		 * Construct a {@link OpenGLSceneGraphVisitor} instance.
+		 * A flag to indicate whether bounding boxes should be drawn.
 		 */
-		OpenGLSceneGraphVisitor() {}
-	
+		bool draw_bounding_box = false;
+
+		/**
+		 * Construct a {@link OpenGLSceneGraphVisitor} instance.
+		 *
+		 * @param[in] draw_bounding_box A  flag to indicate whether bounding boxes
+		 * should be drawn.
+		 */
+		OpenGLSceneGraphVisitor(bool draw_bounding_box) : draw_bounding_box(draw_bounding_box) {}
+
+		/**
+		 * Visit a {@link Node} in the scene graph.
+		 *
+		 * @param[in] node The node to visit.
+		 */
+		virtual void visit(const traceur::Node &) final;
+
 		/**
 		 * Visit a {@link Sphere} primitive in the scene graph.
 		 *
@@ -53,6 +68,20 @@ namespace traceur {
 		 * @param[in] node The node to visit.
 		 */
 		virtual void visit(const traceur::Triangle &) final;
+
+		/**
+		 * Visit a {@link Box} primitive in the scene graph.
+		 *
+		 * @param[in] node The node to visit.
+		 */
+		virtual void visit(const traceur::Box &) final;
+
+		/**
+		 * Visit a bounding {@link Box} primitive in the scene graph.
+		 *
+		 * @param[in] node The node to visit.
+		 */
+		virtual void visit_bounding_box(const traceur::Box &) final;
 	};
 }
 

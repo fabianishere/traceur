@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 #include <ctime>
+#include <chrono>
 #include <memory>
 
 #include <glm/glm.hpp>
@@ -19,6 +20,7 @@
 #include <traceur/core/kernel/multithreaded.hpp>
 #include <traceur/core/scene/graph/factory.hpp>
 #include <traceur/core/scene/graph/vector.hpp>
+#include <traceur/core/scene/graph/kdtree.hpp>
 #include <traceur/loader/obj.hpp>
 #include <traceur/exporter/ppm.hpp>
 
@@ -34,8 +36,8 @@
 glm::vec3 MyCameraPosition;
 
 // MyLightPositions stores all the light positions to use
-// for the ray tracing. Please notice, the light that is 
-// used for the real-time rendering is NOT one of these, 
+// for the ray tracing. Please notice, the light that is
+// used for the real-time rendering is NOT one of these,
 // but following the camera instead.
 std::vector<glm::vec3> MyLightPositions;
 
@@ -46,12 +48,11 @@ glm::vec3 testRayOrigin;
 glm::vec3 testRayDestination;
 
 // The rendering kernel to use
-//std::unique_ptr<traceur::BasicKernel> kernel;
 std::unique_ptr<traceur::MultithreadedKernel> kernel;
 // The scene we want to render
 std::unique_ptr<traceur::Scene> scene;
 // The scene graph visitor to draw the scene.
-std::unique_ptr<traceur::SceneGraphVisitor> visitor;
+std::unique_ptr<traceur::OpenGLSceneGraphVisitor> visitor;
 // The exporter we use to export the result
 std::unique_ptr<traceur::Exporter> exporter;
 
@@ -74,14 +75,13 @@ void init(std::string &path)
 	//here, we set it to the current location of the camera
 	MyLightPositions.push_back(MyCameraPosition);
 
-	auto factory = traceur::make_factory<traceur::VectorSceneGraphBuilder>();
+	auto factory = traceur::make_factory<traceur::KDTreeSceneGraphBuilder>();
 	auto loader = std::make_unique<traceur::ObjLoader>(std::move(factory));
 	printf("[main] Loading model at path \"%s\"\n", path.c_str());
 	scene = loader->load(path);
 
-	kernel = std::make_unique<traceur::MultithreadedKernel>(std::make_shared<traceur::BasicKernel>(), 8);
-	//kernel = std::make_unique<traceur::BasicKernel>();
-	visitor = std::make_unique<traceur::OpenGLSceneGraphVisitor>();
+	kernel = std::make_unique<traceur::MultithreadedKernel>(std::make_shared<traceur::BasicKernel>(), 16);
+	visitor = std::make_unique<traceur::OpenGLSceneGraphVisitor>(false);
 	exporter = std::make_unique<traceur::PPMExporter>();
 }
 
@@ -90,8 +90,6 @@ void init(std::string &path)
  */
 void render()
 {
-	printf("[main] Rendering scene\n");
-
 	// Get the viewport of the window
 	glm::ivec4 viewport;
 	glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
@@ -106,8 +104,11 @@ void render()
 
 	printf("%zu\n", scene->lights.size());
 
+	printf("[main] Rendering scene [%s]\n", kernel->name().c_str());
+
 	// Time the ray tracing
-	clock_t begin = std::clock();
+	auto beginA = std::chrono::high_resolution_clock::now();
+	auto beginB = std::clock();
 
 	camera.viewport[2] = 1024;
 	camera.viewport[3] = 1024;
@@ -115,9 +116,11 @@ void render()
 	auto result = kernel->render(*scene, camera);
 
 	// Calculate the elapsed time
-	clock_t end = std::clock();
-	double secs = double(end - begin) / CLOCKS_PER_SEC;
-	printf("[main] Rendering took %f seconds\n", secs);
+	auto endA = std::chrono::high_resolution_clock::now();
+	auto endB = std::clock();
+	double real = std::chrono::duration_cast<std::chrono::duration<double>>(endA - beginA).count();
+	double cpu = double(endB - beginB) / CLOCKS_PER_SEC;
+	printf("[main] Rendering done (cpu %.3fs, real %.3fs)\n", cpu, real);
 
 	// Export the result to a file
 	exporter->write(*result, "result.ppm");
@@ -131,7 +134,7 @@ void render()
 void draw()
 {
 	// Draw the loaded scene graph
-	scene->graph->traverse(*visitor);
+	scene->graph->accept(*visitor);
 
 	//let's draw the lights in the scene as points
 	glPushAttrib(GL_ALL_ATTRIB_BITS); //store all GL attributes
@@ -217,10 +220,10 @@ int main(int argc, char** argv)
 	// Clear color of the background is black.
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 
-	
+
 	// Activate rendering modes
 	//activate depth test
-	glEnable(GL_DEPTH_TEST); 
+	glEnable(GL_DEPTH_TEST);
 	//draw front-facing triangles filled
 	//and back-facing triangles as wires
 	glPolygonMode(GL_FRONT,GL_FILL);
@@ -245,7 +248,7 @@ int main(int argc, char** argv)
 }
 
 /**
- * OpenGL setup - functions do not need to be changed! 
+ * OpenGL setup - functions do not need to be changed!
  * you can SKIP AHEAD TO THE KEYBOARD FUNCTION
  */
 void display(void)
@@ -273,7 +276,7 @@ void reshape(int w, int h)
 }
 
 /**
- * Transform the x and y position on the screen into the corresponding 3D world 
+ * Transform the x and y position on the screen into the corresponding 3D world
  * position.
  */
 void produceRay(int x_I, int y_I, glm::vec3 &origin, glm::vec3 &destination)
@@ -306,6 +309,10 @@ void keyboard(unsigned char key, int x, int y)
 	case 'r':
 		// Render the current scene
 		render();
+		break;
+	case 'b':
+		// Enable/disable bounding boxes visuals
+		visitor->draw_bounding_box = !visitor->draw_bounding_box;
 		break;
 	case 27:
 		exit(0);

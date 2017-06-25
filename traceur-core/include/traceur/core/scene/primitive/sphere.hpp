@@ -78,17 +78,17 @@ namespace traceur {
 
 			double t1 = b - d;
 			float lambda = t1 > 0 ? t1 : t2;
-			
+
 			hit.primitive = this;
 			hit.distance = lambda;
 			hit.position = ray.origin + lambda * ray.direction;
 			hit.normal = glm::normalize((ray.origin - origin) + lambda * ray.direction);
-			
+
 			return true;
 		}
 
 		/**
-		 * Accept a {@link SceneGraphVisitor} instance to visit this node in  
+		 * Accept a {@link SceneGraphVisitor} instance to visit this node in
 		 * the graph of the scene.
 		 *
 		 * @param[in] visitor The visitor to accept.

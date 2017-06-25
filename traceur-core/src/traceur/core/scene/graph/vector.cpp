@@ -37,7 +37,7 @@ inline bool traceur::VectorSceneGraph::intersect(const traceur::Ray &ray, traceu
 	double dist = std::numeric_limits<double>::infinity();
 	bool intersection = false;
 
-	for (auto &primitive : *nodes) {
+	for (auto &primitive : nodes) {
 		/* Test if ray intersects bounding box of primitive */
 		if (!primitive->bounding_box().intersect(ray, hit)) {
 			continue;
@@ -51,13 +51,18 @@ inline bool traceur::VectorSceneGraph::intersect(const traceur::Ray &ray, traceu
 		}
 	}
 
-	hit = nearest;
+	if (intersection) {
+		hit = nearest;
+	}
 	return intersection;
 }
 
-void traceur::VectorSceneGraph::traverse(traceur::SceneGraphVisitor &visitor) const
+void traceur::VectorSceneGraph::accept(traceur::SceneGraphVisitor &visitor) const
 {
-	for (auto &primitive : *nodes) {
+	/* Visit the root node */
+	visitor.visit(*this);
+
+	for (auto &primitive : nodes) {
 		primitive->accept(visitor);
 	}
 }
@@ -65,24 +70,14 @@ void traceur::VectorSceneGraph::traverse(traceur::SceneGraphVisitor &visitor) co
 void traceur::VectorSceneGraphBuilder::add(const std::shared_ptr<traceur::Primitive> primitive)
 {
 	nodes.push_back(primitive);
-
-	for (auto &vertex : {primitive->bounding_box().min,
-						 primitive->bounding_box().max}) {
-
-		for (int i = 0; i < 3; i++) {
-			if (vertex[i] < min[i])
-				min[i] = vertex[i];
-			if (vertex[i] > max[i])
-				max[i] = vertex[i];
-		}
-	}
+	box = box.expand(primitive->bounding_box());
 }
 
 std::unique_ptr<traceur::SceneGraph> traceur::VectorSceneGraphBuilder::build() const
 {
 	return std::make_unique<traceur::VectorSceneGraph>(
 			nodes,
-			traceur::Box(min, max, std::make_shared<traceur::Material>())
+			box
 	);
 }
 
