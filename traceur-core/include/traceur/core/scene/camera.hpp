@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Fabian Mastenbroek <f.s.mastenbroek@student.tudelft.nl>
@@ -46,7 +46,12 @@ namespace traceur {
 		/**
 		 * The viewport of the camera.
 		 */
-		const glm::ivec4 viewport;
+		glm::ivec4 viewport;
+
+		/**
+		 * The position of the camera
+		 */
+		glm::vec3 position;
 
 		/**
 		 * Construct a {@link Camera} instance.
