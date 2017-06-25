@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -29,10 +29,11 @@
 
 #include <traceur/core/scene/graph/graph.hpp>
 #include <traceur/core/lightning/light.hpp>
+#include <traceur/core/scene/camera.hpp>
 
 namespace traceur {
 	/**
-	 * This class represents a scene which consists of primitives and lights, 
+	 * This class represents a scene which consists of primitives and lights,
 	 * which can be rendered by a {@link Kernel} instance.
 	 */
 	class Scene {
@@ -57,7 +58,7 @@ namespace traceur {
 		 *
 		 * @param[in] graph The graph of the scene.
 		 */
-		Scene(std::shared_ptr<traceur::SceneGraph> graph) : 
+		Scene(std::shared_ptr<traceur::SceneGraph> graph) :
 			graph(graph) {}
 
 		/**

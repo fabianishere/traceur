@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -26,7 +26,8 @@
 #include <glm/gtc/type_ptr.hpp>
 
 void traceur::PPMExporter::write(const traceur::Film &film,
-								 const std::string &path) const {
+								 const std::string &path) const
+{
 	/* Open file as binary on Windows (see #42) */
 	auto file = fopen(path.c_str(), "wb");
 
