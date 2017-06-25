@@ -133,8 +133,8 @@ std::unique_ptr<traceur::KDTreeNode> traceur::KDTreeSceneGraphBuilder::build(
 		node->origin = node->origin + (primitive->midpoint() / (float) primitives.size());
 	}
 
-	/* Do not go deeper than ten nodes */
-	if (depth > 10) {
+	/* Do not create too small nodes */
+	if (depth > 5 || primitives.size() <= 200) {
 		return std::move(node);
 	}
 
@@ -149,10 +149,6 @@ std::unique_ptr<traceur::KDTreeNode> traceur::KDTreeSceneGraphBuilder::build(
 		} else {
 			right.push_back(primitive);
 		}
-	}
-
-	if (left.size() < 5 && right.size() < 5) {
-		return std::move(node);
 	}
 
 	node->left = std::move(build(left, depth + 1));
