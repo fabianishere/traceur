@@ -44,9 +44,24 @@ namespace traceur {
 		float shininess;
 
 		/**
+		 * The optical density / index of refraction of the material.
+		 */
+		float optical_density;
+
+        /**
+         * The transparency value (as 0 opaque..1 transparent) of the material.
+         */
+        float transparency;
+
+        /**
+         * The illumination model of the material.
+         */
+        int illumination_model;
+
+		/**
 		 * Construct a {@link Material} instance.
 		 */
-		Material() : shininess(0.f) {}
+		Material() : shininess(0.f), optical_density(1.f), transparency(0.f), illumination_model(1) {}
 
 		/**
 		 * Construct a {@link Material} instance.
@@ -55,17 +70,26 @@ namespace traceur {
 		 * @param ambient The ambient term of the material.
 		 * @param specular The specular term of the material.
 		 * @param shininess The specular exponent of the material.
+		 * @param optical_density The optical density of the material.
+		 * @param transparency The transparency of the material.
+		 * @param illumination_model The illumination model of the material.
 		 */
 		Material(
 				const glm::vec3 &diffuse,
 				const glm::vec3 &ambient,
 				const glm::vec3 &specular,
-				float shininess
+                float shininess,
+				float optical_density,
+                float transparency,
+                int illumination_model
 		) :
 			diffuse(diffuse),
 			ambient(ambient),
 			specular(specular),
-			shininess(shininess) {}
+            shininess(shininess),
+			optical_density(optical_density),
+            transparency(transparency),
+            illumination_model(illumination_model) {}
 	};
 }
 
