@@ -296,7 +296,7 @@ void computeReflection(const traceur::Ray &ray, const traceur::Hit &hit, int dep
 
 	// Also show reflection rays that do not intersect a primitive
 	if (!intersects) {
-		rays.push_back({hit.position, hit.position + reflect, hit.primitive, depth + 1});
+		rays.emplace_back(hit.position, hit.position + reflect, hit.primitive, depth + 1);
 	}
 }
 
@@ -331,7 +331,7 @@ void computeRefraction(const traceur::Ray &ray, const traceur::Hit &hit, int dep
 		next.normal = refractionNormal;
 		return computeReflection(ray, next, depth + 1);
 	}
-	rays.push_back({hit.position, hit.position +  0.000001f * refract, hit.primitive, depth});
+	rays.emplace_back(hit.position, hit.position +  0.000001f * refract, hit.primitive, depth);
 }
 
 /**
@@ -351,7 +351,7 @@ bool computeTestRays(const traceur::Ray &ray, int depth)
 
 	traceur::Hit hit;
 	if (scene->graph->intersect(ray, hit)) {
-		rays.push_back({ray.origin, hit.position, hit.primitive, depth});
+		rays.emplace_back(ray.origin, hit.position, hit.primitive, depth);
 		computeReflection(ray, hit, depth);
 		computeRefraction(ray, hit, depth);
 		return true;
