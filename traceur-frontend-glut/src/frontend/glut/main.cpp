@@ -272,21 +272,89 @@ void produceRay(int x_I, int y_I, glm::vec3 &origin, glm::vec3 &destination)
 	destination = glm::unProject(glm::vec3(x_I, y_new, 1), model, projection, viewport);
 }
 
+/* Forward Declaration */
+bool computeTestRays(const traceur::Ray &, int);
+
+/**
+ * Computes the reflection ray given the hit context.
+ *
+ * @param[in] ray The ray to use.
+ * @param[in] hit The hit structure to use.
+ * @param[in] depth The depth of the recursion.
+ */
+void computeReflection(const traceur::Ray &ray, const traceur::Hit &hit, int depth)
+{
+	auto reflect = glm::reflect(ray.direction, hit.normal);
+	bool intersects = computeTestRays(traceur::Ray(
+		hit.position + reflect * 0.000001f,
+		reflect
+	), depth + 1);
+
+	// Also show reflection rays that do not intersect a primitive
+	if (!intersects) {
+		rays.push_back({hit.position, hit.position + reflect, depth + 1});
+	}
+}
+
+/**
+ * Computes the refraction ray given the hit context.
+ *
+ * @param[in] ray The ray to use.
+ * @param[in] hit The hit structure to use.
+ * @param[in] depth The depth of the recursion.
+ */
+void computeRefraction(const traceur::Ray &ray, const traceur::Hit &hit, int depth)
+{
+	float sourceDestRefraction;
+	glm::vec3 refractionNormal;
+
+	if(glm::dot(hit.normal, ray.direction) < 0.f) {
+		// enter material
+		sourceDestRefraction = 1.f / hit.primitive->material->optical_density;
+		refractionNormal = hit.normal;
+	} else {
+		// exit material
+		sourceDestRefraction = hit.primitive->material->optical_density / 1.f;
+		refractionNormal = - hit.normal;
+	}
+
+	glm::vec3 refract = glm::refract(ray.direction, refractionNormal,
+									 sourceDestRefraction);
+
+	if (!glm::isnan(refract).length()) {
+		traceur::Hit next(hit);
+		// Full internal ray reflection
+		next.normal = refractionNormal;
+		return computeReflection(ray, next, depth + 1);
+	}
+
+	rays.push_back({hit.position, hit.position +  0.000001f * refract});
+}
+
 /**
  * Computes the test rays to draw given a ray.
  *
  * @param[in] ray The ray to use.
  * @param[in] depth The depth of the recursion.
+ * @return <code>true</code> if there was an intersection, <code>false</code>
+ * otherwise.
  */
-void computeTestRays(const traceur::Ray &ray, int depth)
+bool computeTestRays(const traceur::Ray &ray, int depth)
 {
+	/* Allow max recursion depth of ten */
+	if (depth > 10) {
+		return false;
+	}
+
 	traceur::Hit hit;
 	if (scene->graph->intersect(ray, hit)) {
 		rays.push_back({ray.origin, hit.position, depth});
-
-		auto reflect = glm::reflect(ray.direction, hit.normal);
-		rays.push_back({hit.position, hit.position + reflect, depth + 1});
+		computeReflection(ray, hit, depth);
+		computeRefraction(ray, hit, depth);
+		return true;
 	}
+
+	return false;
 }
 
 /**
