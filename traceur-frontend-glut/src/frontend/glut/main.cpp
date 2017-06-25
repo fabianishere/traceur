@@ -78,6 +78,7 @@ void init(std::string &path)
 	auto loader = std::make_unique<traceur::ObjLoader>(std::move(factory));
 	printf("[main] Loading model at path \"%s\"\n", path.c_str());
 	scene = loader->load(path);
+	printf("[main] Loaded scene with %zu nodes\n", scene->graph->size());
 
 	kernel = std::make_unique<traceur::MultithreadedKernel>(std::make_shared<traceur::BasicKernel>(), 16);
 	visitor = std::make_unique<traceur::OpenGLSceneGraphVisitor>(false);
