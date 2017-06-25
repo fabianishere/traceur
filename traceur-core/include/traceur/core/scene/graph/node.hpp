@@ -78,6 +78,16 @@ namespace traceur {
 		virtual void accept(traceur::SceneGraphVisitor &) const = 0;
 
 		/**
+		 * Return the midpoint of this node.
+		 *
+		 * @return The midpoint of this node.
+		 */
+		virtual glm::vec3 midpoint() const
+		{
+			return origin;
+		}
+
+		/**
 		 * Return the bounding {@link Box} which encapsulates the whole node.
 		 *
 		 * @return A bounding {@link Box} of the node.

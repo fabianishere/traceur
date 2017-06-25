@@ -48,9 +48,9 @@ void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Sphere &sphere)
 	glutSolidSphere(sphere.radius, 50, 50);
 	glPopMatrix();
 
-	if (draw_bounding_box) {
-		visit_bounding_box(sphere.bounding_box());
-	}
+	//if (draw_bounding_box) {
+	//	visit_bounding_box(sphere.bounding_box());
+	//}
 }
 
 void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Triangle &triangle)
@@ -65,9 +65,9 @@ void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Triangle &triangle)
 		glVertex3fv(glm::value_ptr(triangle.origin + triangle.v));
 	glEnd();
 
-	if (draw_bounding_box) {
-		visit_bounding_box(triangle.bounding_box());
-	}
+	//if (draw_bounding_box) {
+	//	visit_bounding_box(triangle.bounding_box());
+	//}
 }
 
 void draw_box(const traceur::Box &box, const glm::vec3 &color)

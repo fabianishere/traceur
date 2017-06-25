@@ -34,6 +34,13 @@ namespace traceur {
 	class Box : public Primitive {
 	public:
 		/**
+		 * An axis of the box.
+		 */
+		enum class Axis: int {
+			X = 0, Y = 1, Z = 1
+		};
+
+		/**
 		 * The minimum vertex in the box.
 		 */
 		glm::vec3 min;
@@ -148,6 +155,21 @@ namespace traceur {
 		virtual const traceur::Box & bounding_box() const final
 		{
 			return *this;
+		}
+
+		/**
+		 * Return the longest axis of this box.
+		 *
+		 * @return The longest axis of the box.
+		 */
+		traceur::Box::Axis longestAxis() const {
+			auto length = max - min;
+
+			if (length.x > length.y && length.x > length.z)
+				return traceur::Box::Axis::X;
+			if (length.y > length.x && length.y > length.z)
+				return traceur::Box::Axis::Y;
+			return traceur::Box::Axis::Z;
 		}
 	};
 }

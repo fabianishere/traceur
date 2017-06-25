@@ -51,7 +51,9 @@ inline bool traceur::VectorSceneGraph::intersect(const traceur::Ray &ray, traceu
 		}
 	}
 
-	hit = nearest;
+	if (intersection) {
+		hit = nearest;
+	}
 	return intersection;
 }
 

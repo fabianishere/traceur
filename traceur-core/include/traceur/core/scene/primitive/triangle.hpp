@@ -130,6 +130,16 @@ namespace traceur {
 		}
 
 		/**
+		 * Return the midpoint of this node.
+		 *
+		 * @return The midpoint of this node.
+		 */
+		virtual glm::vec3 midpoint() const
+		{
+			return origin + u / 3.f + v / 3.f;
+		}
+
+		/**
 		 * Return the bounding {@link Box} which encapsulates the whole
 		 * primitive.
 		 *

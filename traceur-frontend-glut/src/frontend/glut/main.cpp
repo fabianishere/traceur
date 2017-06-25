@@ -20,6 +20,7 @@
 #include <traceur/core/kernel/multithreaded.hpp>
 #include <traceur/core/scene/graph/factory.hpp>
 #include <traceur/core/scene/graph/vector.hpp>
+#include <traceur/core/scene/graph/kdtree.hpp>
 #include <traceur/loader/obj.hpp>
 #include <traceur/exporter/ppm.hpp>
 
@@ -74,7 +75,7 @@ void init(std::string &path)
 	//here, we set it to the current location of the camera
 	MyLightPositions.push_back(MyCameraPosition);
 
-	auto factory = traceur::make_factory<traceur::VectorSceneGraphBuilder>();
+	auto factory = traceur::make_factory<traceur::KDTreeSceneGraphBuilder>();
 	auto loader = std::make_unique<traceur::ObjLoader>(std::move(factory));
 	printf("[main] Loading model at path \"%s\"\n", path.c_str());
 	scene = loader->load(path);
