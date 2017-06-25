@@ -83,8 +83,6 @@ void render()
 			.lookAt(getCameraPosition(), getCameraDirection(), getCameraUp())
 			.perspective(glm::radians(50.f), 1, 0.01, 10);
 
-	scene->lights = MyLightPositions;
-
 	printf("[main] Rendering scene [%s]\n", kernel->name().c_str());
 
 	// Time the ray tracing
@@ -287,7 +285,7 @@ void computeTestRays(const traceur::Ray &ray, int depth)
 		rays.push_back({ray.origin, hit.position, depth});
 
 		auto reflect = glm::reflect(ray.direction, hit.normal);
-		rays.push_back({hit.position, hit.position - reflect, depth + 1});
+		rays.push_back({hit.position, hit.position + reflect, depth + 1});
 	}
 }
 
