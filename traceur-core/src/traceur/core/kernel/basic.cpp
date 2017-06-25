@@ -151,32 +151,35 @@ void traceur::BasicKernel::Offset(glm::vec3* inter, glm::vec3* dest) const{
 
 float traceur::BasicKernel::lightLevel(const traceur::Light &lightSource, const traceur::Hit &hit, const traceur::Scene &scene) const {
 	float resLevel = 0;
-	for (int i = 0; i < 10; i++) {
+
+	// reset the light source random seed
+	srand(1);
+
+	int fakeSources = 100;
+	for (int i = 0; i < fakeSources; i++) {
 		// run X fake light sources
 
-		float LO = -0.15;
-		float HI = 0.15;
+		float LO = -0.025;
+		float HI = 0.025;
 		float offsetX = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
 		float offsetY = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
 		float offsetZ = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
 
 		float level = localLightLevel(glm::vec3(offsetX, offsetY, offsetZ) + lightSource, hit, scene);
-		resLevel += (level / ((float)10));
+		resLevel += (level / ((float)fakeSources));
 	}
 
 	return resLevel;
 }
  
 float traceur::BasicKernel::localLightLevel(const traceur::Light &lightSource, const traceur::Hit &hit, const traceur::Scene &scene) const{
-	// Can be optimized by having a different intersect method that returns false upon first impact that is closer than the light.
-
 	glm::vec3 origin = lightSource;
 	glm::vec3 direction = hit.position - lightSource;
 	direction = glm::normalize(direction);
 	traceur::Ray newRay = traceur::Ray(origin, direction);
 
 	traceur::Hit foundHit;
-	if (scene.graph->intersect(newRay, foundHit)) {
+	if (scene.graph->intersectFirst(newRay, foundHit, hit.distance)) {
 		// check if foundHit is equal to hit
 		glm::vec3 res = foundHit.position - hit.position;
 		// epsilon comparison
