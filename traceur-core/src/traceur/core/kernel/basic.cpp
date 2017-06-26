@@ -67,7 +67,7 @@ traceur::Pixel traceur::BasicKernel::shade(const traceur::TracingContext &contex
                 case 9:
                     // Specular * ( {SUM specular() } ) : 2
                     // Specular * ( {SUM specular() } + reflection() ) : 3, 4, 6, 8, 9
-                    specularReflectanceMultiples += specular(context, lightDir);
+                    specularReflectanceMultiples += specular(context, lightDir) * lightCastIntensity;
                     break;
                 case 5:
                 case 7:
@@ -343,7 +343,9 @@ float traceur::BasicKernel::localLightLevel(const traceur::Light &lightSource, c
         // check if foundHit is equal to hit
         glm::vec3 res = foundHit.position - hit.position;
         // epsilon comparison
-        bool nothingBetween = ((abs(res[0]) < 0.001) && (abs(res[1]) < 0.001) && (abs(res[2]) < 0.001));
+
+
+        bool nothingBetween = ((std::abs(res[0]) < 0.001) && (std::abs(res[1]) < 0.001) && (std::abs(res[2]) < 0.001));
         bool inShadow = !nothingBetween;
 
         if (inShadow) {
