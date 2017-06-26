@@ -25,6 +25,8 @@
 #define TRACEUR_CORE_KERNEL_FILM_H
 
 #include <vector>
+#include <algorithm>
+
 #include <glm/glm.hpp>
 #include <traceur/core/kernel/pixel.hpp>
 
@@ -38,12 +40,12 @@ namespace traceur {
 		/**
 		 * The width of this film.
 		 */
-		const size_t width;
+		const int width;
 
 		/**
 		 * The height of this film.
 		 */
-		const size_t height;
+		const int height;
 
 		/**
 		 * Construct a {@link Film} instance.
@@ -51,7 +53,7 @@ namespace traceur {
 		 * @param[in] width The width of the film.
 		 * @param[in] height The height of the film.
 		 */
-		Film(size_t width, size_t height) : 
+		Film(int width, int height) :
 			width(width), height(height) {}
 
 		/**
@@ -62,11 +64,22 @@ namespace traceur {
 		/**
 		 * Return the reference to a {@link Pixel} in this film.
 		 *
+		 * @param[in] pos The position within the film.
+		 * @return A reference to the {@link Pixel}.
+		 */
+		inline virtual traceur::Pixel & operator()(const glm::ivec2 &) = 0;
+
+		/**
+		 * Return the reference to a {@link Pixel} in this film.
+		 *
 		 * @param[in] x The x coordinate in the film.
 		 * @param[in] y The y coordinate in the film.
 		 * @return A reference to the {@link Pixel}.
 		 */
-		inline virtual traceur::Pixel & operator()(int, int) = 0;
+		inline virtual traceur::Pixel & operator()(int x, int y)
+		{
+			return operator()(glm::ivec2(x, y));
+		}
 
 		/**
 		 * Return the pixel value to a {@link Pixel} in this film.
@@ -75,11 +88,23 @@ namespace traceur {
 		 * @param[in] y The y coordinate in the film.
 		 * @return The pixel value.
 		 */
-		inline virtual traceur::Pixel operator()(int, int) const = 0;
+		inline virtual traceur::Pixel operator()(const glm::ivec2 &) const = 0;
+
+		/**
+		 * Return the pixel value to a {@link Pixel} in this film.
+		 *
+		 * @param[in] pos The position within the film.
+		 * @return The pixel value.
+		 */
+		inline virtual traceur::Pixel operator()(int x, int y) const
+		{
+			return operator()(glm::ivec2(x, y));
+		}
+
 	};
 
 	/**
-	 * A {@link Film} that is backed by a continuous memory region to allow 
+	 * A {@link Film} that is backed by a continuous memory region to allow
 	 * fast read and writes.
 	 */
 	class DirectFilm: public Film {
@@ -94,36 +119,34 @@ namespace traceur {
 		 * @param[in] width The width of the film.
 		 * @param[in] height The height of the film.
 		 */
-		DirectFilm(size_t width, size_t height) : 
-			Film(width, height), buffer(std::vector<traceur::Pixel>(width * height)) {}
-	
+		DirectFilm(int width, int height) :
+			Film(width, height), buffer(std::vector<traceur::Pixel>(static_cast<size_t>(std::max(0, width * height)))) {}
+
 		/**
 		 * Return the reference to a {@link Pixel} in this film.
 		 *
-		 * @param[in] x The x coordinate in the film.
-		 * @param[in] y The y coordinate in the film.
+		 * @param[in] pos The position within the film.
 		 * @return A reference to the {@link Pixel}.
 		 */
-		inline virtual traceur::Pixel & operator()(int x, int y) final
+		inline virtual traceur::Pixel & operator()(const glm::ivec2 &pos) final
 		{
-			return buffer[y * width + x];
+			return buffer[pos.y * width + pos.x];
 		}
 
 		/**
 		 * Return the pixel value to a {@link Pixel} in this film.
 		 *
-		 * @param[in] x The x coordinate in the film.
-		 * @param[in] y The y coordinate in the film.
+		 *  @param[in] pos The position within the film.
 		 * @return The pixel value.
 		 */
-		inline virtual traceur::Pixel operator()(int x, int y) const final
+		inline virtual traceur::Pixel operator()(const glm::ivec2 &pos) const final
 		{
-			return buffer[y * width + x];
+			return buffer[pos.y * width + pos.x];
 		}
 	};
 
 	/**
-	 * A {@link Film} that is partitioned in multiple subfilms on which parts 
+	 * A {@link Film} that is partitioned in multiple subfilms on which parts
 	 * of the scene are projected via a raytracing {@link Kernel}.
 	 */
 	template<typename T = DirectFilm, typename... Args>
@@ -134,49 +157,58 @@ namespace traceur {
 		std::vector<T> partitions;
 
 		/**
-		 * The width of a partition.
+		 * The minimum width of a partition.
 		 */
-		size_t px;
+		int px;
 
 		/**
-		 * The height of a partition.
+		 * The minimum height of a partition.
 		 */
-		size_t py;
+		int py;
+
+		/**
+		 * The columns per row.
+		 */
+		int columns;
+
+		/**
+		 * The rows of the film.
+		 */
+		int rows;
 	public:
 		/**
 		 * The amount of partitions in the film.
 		 */
-		const size_t n;
-
-		/**
-		 * The amount columns in the paritioned film.
-		 */
-		const size_t columns;
+		const int n;
 
 		/**
 		 * Construct a {@link PartitionedFilm} instance.
 		 *
 		 * @param[in] width The width of the film.
 		 * @param[in] height The height of the film.
-		 * @param[in] columns The amount of columns in the partitioned film.
+		 * @param[in] n The amount of partitions to create.
 		 * @param[in] args The arguments to further instantiate the underlying
 		 * partition type.
 		 */
-		PartitionedFilm(size_t width, size_t height, size_t columns, Args&&... args) : Film(width, height), columns(columns), n(columns * columns)
+		PartitionedFilm(int width, int height, int n, Args&&... args)
+			: Film(width, height), n(n)
 		{
+			rows = static_cast<int>(floor(sqrt(n)));
+			columns = static_cast<int>(ceil(n / rows));
 			px = width / columns;
-			py = height / columns;
-			size_t rx = width % columns;
-			size_t ry = height % columns;
+			py = height / rows;
+			int rx = width % columns;
+			int ry = height % rows;
 
 			/* Create partitions of the specified size and amount of partitions */
-			for (int i = 0; i < n - 1; i++) {
-				partitions.push_back(T(px, py, std::forward<Args>(args)...));
-			}
-
-			/* Add the last partition with the remainders */
-			if (n > 0) {
-				partitions.push_back(T(px + rx, py + ry, std::forward<Args>(args)...));
+			for (int row = 0; row < rows; row++) {
+				for (int column = 0; column < columns; column++) {
+					partitions.push_back(T(
+						px + (column == columns - 1) * rx,
+						py + (row == rows - 1) * ry,
+						std::forward<Args>(args)...
+					));
+				}
 			}
 		}
 
@@ -191,41 +223,47 @@ namespace traceur {
 			return partitions[n];
 		}
 
+		/**
+		 * Return the offset of a particular partition within the film.
+		 *
+		 * @param[in] n The partition to get the offset of.
+		 * @return The offset within the film.
+		 */
+		inline glm::ivec2 offset(int n) const
+		{
+			return {
+				(n % columns) * px,
+				(n / columns) * py
+			};
+		}
 
 		/**
 		 * Return the reference to a {@link Pixel} in this film.
 		 *
-		 * @param[in] x The x coordinate in the film.
-		 * @param[in] y The y coordinate in the film.
+		 * @param[in] pos The position within the film.
 		 * @return A reference to the {@link Pixel}.
 		 */
-		inline virtual traceur::Pixel & operator()(int x, int y) final
+		inline virtual traceur::Pixel & operator()(const glm::ivec2 &pos) final
 		{
-			size_t j = x / px;
-			size_t i = y / py;
-			size_t rx = x % px;
-			size_t ry = y % py;
-
-			return partitions[i * columns + j](rx, ry);
+			int j = std::min(pos.x / px, columns - 1);
+			int i = std::min(pos.y / py, rows - 1);
+			int n = i * columns + j;
+			return partitions[n](pos - offset(n));
 		}
 
 		/**
 		 * Return the pixel value to a {@link Pixel} in this film.
 		 *
-		 * @param[in] x The x coordinate in the film.
-		 * @param[in] y The y coordinate in the film.
+		 * @param[in] pos The position within the film.
 		 * @return The pixel value.
 		 */
-		inline virtual traceur::Pixel operator()(int x, int y) const final
+		inline virtual traceur::Pixel operator()(const glm::ivec2 &pos) const final
 		{
-			size_t j = x / px;
-			size_t i = y / py;
-			size_t rx = x % px;
-			size_t ry = y % py;
-
-			return partitions[i * columns + j](rx, ry);
+			int j = std::min(pos.x / px, columns - 1);
+			int i = std::min(pos.y / py, rows - 1);
+			int n = i * columns + j;
+			return partitions[n](pos - offset(n));
 		}
-
 	};
 }
 #endif /* TRACEUR_CORE_KERNEL_FILM_H */
