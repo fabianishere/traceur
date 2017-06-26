@@ -34,6 +34,13 @@ namespace traceur {
 	class Box : public Primitive {
 	public:
 		/**
+		 * An axis of the box.
+		 */
+		enum class Axis: int {
+			X = 0, Y = 1, Z = 1
+		};
+
+		/**
 		 * The minimum vertex in the box.
 		 */
 		glm::vec3 min;
@@ -61,6 +68,30 @@ namespace traceur {
 		Box(const glm::vec3 &min, const glm::vec3 max,
 			const std::shared_ptr<traceur::Material> material) :
 				Primitive((min + max) / 2.f, material), min(min), max(max) {}
+
+		/**
+		 * Construct a {@link Box} as bounding box.
+		 *
+		 * @return The bounding box instance.
+		 */
+		static Box createBoundingBox()
+		{
+			auto min = glm::vec3(std::numeric_limits<float>::infinity());
+			auto max = -min;
+			return createBoundingBox(min, max);
+		}
+
+		/**
+		 * Construct a {@link Box} as bounding box.
+		 *
+		 * @param[in] min The minimum vertex in the box.
+		 * @param[in] max The maximum vertex in the box.
+		 * @return The bounding box instance.
+		 */
+		static Box createBoundingBox(const glm::vec3 &min, const glm::vec3 &max)
+		{
+			return Box(min, max, std::make_shared<traceur::Material>());
+		}
 
 		/**
 		 * Determine whether the given ray intersects the shape.
@@ -93,6 +124,18 @@ namespace traceur {
 		}
 
 		/**
+		 * Expand this {@link Box} with another box.
+		 *
+		 * @param[in] other The other box to expand with.
+		 * @return The next expanded box with the material properties of this
+		 * instance.
+		 */
+		traceur::Box expand(const traceur::Box &other) const
+		{
+			return traceur::Box(glm::min(min, other.min), glm::max(max, other.max), material);
+		}
+
+		/**
 		 * Accept a {@link SceneGraphVisitor} instance to visit this node in
 		 * the graph of the scene.
 		 *
@@ -112,6 +155,21 @@ namespace traceur {
 		virtual const traceur::Box & bounding_box() const final
 		{
 			return *this;
+		}
+
+		/**
+		 * Return the longest axis of this box.
+		 *
+		 * @return The longest axis of the box.
+		 */
+		traceur::Box::Axis longestAxis() const {
+			auto length = max - min;
+
+			if (length.x > length.y && length.x > length.z)
+				return traceur::Box::Axis::X;
+			if (length.y > length.x && length.y > length.z)
+				return traceur::Box::Axis::Y;
+			return traceur::Box::Axis::Z;
 		}
 	};
 }

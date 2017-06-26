@@ -326,7 +326,7 @@ traceur::Pixel traceur::BasicKernel::trace(const traceur::Scene &scene,
 
 float traceur::BasicKernel::lightLevel(const traceur::Light &lightSource, const traceur::Hit &hit, const traceur::Scene &scene) const {
     float resLevel = 0;
-    
+
     srand(1);
     for (int i = 0; i < 50; i++) {
         // run X fake light sources

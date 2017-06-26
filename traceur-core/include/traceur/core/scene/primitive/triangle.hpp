@@ -150,6 +150,16 @@ namespace traceur {
 		}
 
 		/**
+		 * Return the midpoint of this node.
+		 *
+		 * @return The midpoint of this node.
+		 */
+		virtual glm::vec3 midpoint() const
+		{
+			return origin + u / 3.f + v / 3.f;
+		}
+
+		/**
 		 * Return the bounding {@link Box} which encapsulates the whole
 		 * primitive.
 		 *
@@ -172,12 +182,8 @@ namespace traceur {
 			glm::vec3 min(infinity), max(-infinity);
 
 			for (auto &vertex : {origin, origin + u, origin + v}) {
-				for (int i = 0; i < 3; i++) {
-					if (vertex[i] < min[i])
-						min[i] = vertex[i];
-					if (vertex[i] > max[i])
-						max[i] = vertex[i];
-				}
+				min = glm::min(min, vertex);
+				max = glm::max(max, vertex);
 			}
 			return traceur::Box(min, max, material);
 		}

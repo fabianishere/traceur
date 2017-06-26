@@ -42,8 +42,8 @@ namespace traceur {
 		virtual ~SceneGraph() {}
 
 		/**
-		 * Determine whether the given ray intersects a shape in the geometry
-		 * of this graph.
+		 * Determine which primitive the given ray intersects in the
+		 * geometry of this graph.
 		 *
 		 * @param[in] ray The ray to intersect with a shape.
 		 * @param[in] hit The intersection structure to which the details will
@@ -51,8 +51,7 @@ namespace traceur {
 		 * @return <code>true</code> if a shape intersects the ray, otherwise
 		 * <code>false</code>.
 		 */
-		inline virtual bool intersect(const traceur::Ray &, traceur::Hit &) const = 0;
-		inline virtual bool intersectFirst(const traceur::Ray &, traceur::Hit &, double oldDistance) const = 0;
+		virtual bool intersect(const traceur::Ray &, traceur::Hit &) const = 0;
 
 		/**
 		 * Accept a {@link SceneGraphVisitor} instance to traverse this scene
