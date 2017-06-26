@@ -51,7 +51,7 @@ const std::string DEFAULT_MODEL_PATH = "assets/dodge.obj";
 const unsigned int WindowSize_X = 800;  // resolution X
 const unsigned int WindowSize_Y = 800;  // resolution Y
 float near = 0.01f;
-float far = 30f;
+float far = 30.f;
 
 /**
  * Initialises the front-end.
