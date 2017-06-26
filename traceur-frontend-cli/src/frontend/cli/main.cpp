@@ -25,6 +25,7 @@
 #include <chrono>
 #include <memory>
 #include <iostream>
+#include <thread>
 
 #include <getopt.h>
 #include <filesystem/path.h>
@@ -49,7 +50,8 @@ int main(int argc, char** argv)
 	int c = -1;
 	int width = 800;
 	int height = 800;
-	int N = 8;
+	int workers = std::thread::hardware_concurrency();
+	int partitions = 64;
 
 
 	// Set camera directions
@@ -58,7 +60,7 @@ int main(int argc, char** argv)
 	glm::vec3 up = glm::vec3(0, 1, 0);
 
 	float x = 0.f, y = 0.f, z = 0.f;
-	while ((c = getopt(argc, argv, "w:h:e:c:u:N:")) != -1) {
+	while ((c = getopt(argc, argv, "w:h:e:c:u:N:p:")) != -1) {
 		switch(c) {
 			case 'w':
 				width = atoi(optarg);
@@ -67,7 +69,10 @@ int main(int argc, char** argv)
 				height = atoi(optarg);
 				break;
 			case 'N':
-				N = atoi(optarg);
+				workers = atoi(optarg);
+				break;
+			case 'p':
+				partitions = atoi(optarg);
 				break;
 			case 'e':
 				sscanf(optarg, "(%f, %f, %f)", &x, &y, &z);
@@ -93,7 +98,9 @@ int main(int argc, char** argv)
 
 	/* Tracing and scheduling kernels */
 	auto tracer = std::make_unique<traceur::BasicKernel>();
-	auto scheduler = std::make_unique<traceur::MultithreadedKernel>(std::move(tracer), N);
+	auto scheduler = std::make_unique<traceur::MultithreadedKernel>(
+		std::move(tracer), workers, partitions
+	);
 
 	// Set up viewport
 	glm::ivec4 viewport = glm::ivec4(0, 0, width, height);
