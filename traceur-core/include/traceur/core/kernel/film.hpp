@@ -143,6 +143,26 @@ namespace traceur {
 		{
 			return buffer[pos.y * width + pos.x];
 		}
+
+		/**
+		 * Return the frame buffer of this film.
+		 *
+		 * @return the frame buffer of this film.
+		 */
+		traceur::Pixel * data()
+		{
+			return buffer.data();
+		}
+
+		/**
+		 * Return the frame buffer of this film.
+		 *
+		 * @return the frame buffer of this film.
+		 */
+		const traceur::Pixel * data() const
+		{
+			return buffer.data();
+		}
 	};
 
 	/**

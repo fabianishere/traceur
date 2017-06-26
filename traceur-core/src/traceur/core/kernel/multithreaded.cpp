@@ -61,14 +61,14 @@ std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(
 
 			/* Notify observers about start */
 			for (auto &observer : observers) {
-				observer->partitionStarted(*this, partition, offset);
+				observer->partitionStarted(*this, i, partition, offset);
 			}
 			/* Render the partition */
 			kernel->render(scene, camera, partition, offset);
 
 			/* Notify observers about finish */
 			for (auto &observer : observers) {
-				observer->partitionFinished(*this, partition, offset);
+				observer->partitionFinished(*this, i, partition, offset);
 			}
 		}));
 	}

@@ -11,8 +11,9 @@
 #include <stdlib.h>
 #include <ctime>
 #include <memory>
-#include <tuple>
 #include <thread>
+#include <map>
+#include <future>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -41,9 +42,14 @@ std::unique_ptr<traceur::Scene> scene;
 std::unique_ptr<traceur::OpenGLSceneGraphVisitor> visitor;
 // The exporter we use to export the result
 std::unique_ptr<traceur::Exporter> exporter;
+// The resulting film. This global variable prevents the film from going out
+// of scope for the real-time preview render.
+std::unique_ptr<traceur::Film> result;
 
 // Test rays
 std::vector<std::tuple<glm::vec3, glm::vec3, const traceur::Primitive *, int>> rays;
+// Real time
+std::vector<std::tuple<glm::ivec2, glm::ivec2, bool>> parts;
 
 // The default model to load
 const std::string DEFAULT_MODEL_PATH = "assets/dodge.obj";
@@ -51,8 +57,11 @@ const std::string DEFAULT_MODEL_PATH = "assets/dodge.obj";
 // Window settings
 const unsigned int WindowSize_X = 800;  // resolution X
 const unsigned int WindowSize_Y = 800;  // resolution Y
+// Projection settings
 const float zNear = 0.01f;
 const float zFar = 30.f;
+// Options
+bool preview = false;
 
 /**
  * Initialises the front-end.
@@ -68,7 +77,7 @@ void init(std::string &path)
 	scene->lights.push_back(getCameraPosition());
 	printf("[main] Loaded scene with %zu nodes\n", scene->graph->size());
 
-	int threads = std::thread::hardware_concurrency();
+	int threads = std::thread::hardware_concurrency() - 1;
 	int partitions = 64 * threads;
 
 	kernel = std::make_unique<traceur::MultithreadedKernel>(
@@ -83,26 +92,23 @@ void init(std::string &path)
 
 /**
  * Render the scene into a file.
+ *
+ * @param[in] viewport The viewport to use for rendering.
  */
-void render()
+void render(const glm::ivec4 &viewport)
 {
-	// Get the viewport of the window
-	glm::ivec4 viewport;
-	glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
-
 	// Set up the camera
 	traceur::Camera camera = traceur::Camera(viewport)
 			.lookAt(getCameraPosition(), getCameraDirection(), getCameraUp())
 			.perspective(glm::radians(50.f), viewport.z / viewport.w, zNear, zFar);
 
 	// Render the scene and capture the result
-	auto result = kernel->render(*scene, camera);
+	result = kernel->render(*scene, camera);
 
 	// Export the result to a file
 	exporter->write(*result, "result.ppm");
 	printf("[main] Saved result to result.ppm\n");
 }
-
 
 /**
  * This function is invoked every frame to draw the image.
@@ -150,6 +156,45 @@ void draw()
 		}
 	glEnd();
 	glPopAttrib();
+
+	/* Draw real-time preview */
+	if (preview) {
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		gluOrtho2D(0, 800, 0, 800);
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+		glTranslated(0, 0, 0);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+		/* Draw render progress */
+		for (auto &part : parts) {
+			auto size = std::get<0>(part);
+			auto offset = std::get<1>(part);
+			bool finished = std::get<2>(part);
+
+			glBegin(GL_QUADS);
+				if (finished) {
+					glColor3f(0.f, 255.f, 0.f);
+				} else {
+					glColor3f(255.f, 0.f, 0.f);
+				}
+				float depth = !finished / 1000.f;
+				glVertex3f(offset.x + size.x, offset.y + size.y, depth);
+				glVertex3f(offset.x, offset.y + size.y, depth);
+				glVertex3f(offset.x, offset.y, depth);
+				glVertex3f(offset.x + size.x, offset.y, depth);
+			glEnd();
+		}
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
+	}
 }
 
 /**
@@ -387,10 +432,17 @@ void keyboard(unsigned char key, int x, int y)
 	case 'l':
 		scene->lights[scene->lights.size() - 1] = getCameraPosition();
 		break;
-	case 'r':
-		// Render the current scene
-		render();
+	case 'r': {
+		// Get the viewport of the window
+		glm::ivec4 viewport;
+		glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
+
+		// Render the current scene on another thread
+		std::thread([viewport]() {
+			render(viewport);
+		}).detach();
 		break;
+	}
 	case 'b':
 		// Enable/disable bounding boxes visuals
 		visitor->draw_bounding_box = !visitor->draw_bounding_box;
@@ -398,6 +450,10 @@ void keyboard(unsigned char key, int x, int y)
 	case 't':
 		// Draw test ray
 		computeTestRays(x, y);
+		break;
+	case 'p':
+		// Enable/disable real-time preview
+		preview = !preview;
 		break;
 	case 27:
 		exit(0);

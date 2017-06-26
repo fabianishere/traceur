@@ -265,7 +265,7 @@ void traceur::BasicKernel::render(const traceur::Scene &scene,
 	/* Notify observers about render */
 	for (auto &observer : observers) {
 		observer->renderStarted(*this, scene, camera, 1);
-		observer->partitionStarted(*this, film, offset);
+		observer->partitionStarted(*this, 0, film, offset);
 	}
 
 	traceur::Ray ray;
@@ -291,7 +291,7 @@ void traceur::BasicKernel::render(const traceur::Scene &scene,
 
 	/* Notify observers about finish */
 	for (auto &observer : observers) {
-		observer->partitionFinished(*this, film, offset);
+		observer->partitionFinished(*this, 0, film, offset);
 		observer->renderFinished(*this, film);
 	}
 }
