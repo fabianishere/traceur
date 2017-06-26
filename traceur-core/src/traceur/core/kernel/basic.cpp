@@ -187,7 +187,7 @@ traceur::Pixel traceur::BasicKernel::refraction(const traceur::TracingContext &c
     // eta = refractiveIndex(sourceMaterial) / refractiveIndex(destinationMaterial)
     float sourceDestRefraction;
     glm::vec3 refractionNormal;
-    
+
     if(glm::dot(context.hit.normal, context.ray.direction) < 0) {
         // enter material
         sourceDestRefraction = 1.f / context.hit.primitive->material->opticalDensity;
@@ -254,6 +254,12 @@ void traceur::BasicKernel::render(const traceur::Scene &scene,
 								  traceur::Film &film,
 								  const glm::ivec2 &offset) const
 {
+	/* Notify observers about render */
+	for (auto &observer : observers) {
+		observer->renderStarted(*this, scene, camera, 1);
+		observer->partitionStarted(*this, film, offset);
+	}
+
 	traceur::Ray ray;
 	traceur::Pixel pixel;
 
@@ -273,6 +279,12 @@ void traceur::BasicKernel::render(const traceur::Scene &scene,
 			// write the pixel color to the array
 			film(x, y) = pixel;
 		}
+	}
+
+	/* Notify observers about finish */
+	for (auto &observer : observers) {
+		observer->partitionFinished(*this, film, offset);
+		observer->renderFinished(*this, film);
 	}
 }
 

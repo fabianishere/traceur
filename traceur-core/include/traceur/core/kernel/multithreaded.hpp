@@ -168,7 +168,8 @@ namespace traceur {
 		 * @param[in] workers The maximum amount of worker threads to spawn.
 		 * @param[in] partitions The maximum amount of partitions to divide
 		 * the render job into.
-		 * @param[in] range The range of partitions to render.
+		 * @param[in] range The range of partitions to render in format
+		 * [from, end].
 		 */
 		MultithreadedKernel(const std::shared_ptr<traceur::Kernel>, int, int, std::pair<int, int>);
 
