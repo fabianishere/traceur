@@ -10,7 +10,6 @@
 
 #include <stdlib.h>
 #include <ctime>
-#include <chrono>
 #include <memory>
 #include <tuple>
 #include <thread>
@@ -26,6 +25,7 @@
 #include <traceur/exporter/ppm.hpp>
 
 #include <traceur/frontend/glut/visitor.hpp>
+#include <traceur/frontend/glut/observer.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 
@@ -77,6 +77,7 @@ void init(std::string &path)
 	);
 	visitor = std::make_unique<traceur::OpenGLSceneGraphVisitor>(false);
 	exporter = std::make_unique<traceur::PPMExporter>();
+	kernel->add_observer(std::make_shared<traceur::ProgressObserver>());
 }
 
 /**
@@ -93,21 +94,8 @@ void render()
 			.lookAt(getCameraPosition(), getCameraDirection(), getCameraUp())
 			.perspective(glm::radians(50.f), viewport.z / viewport.w, zNear, zFar);
 
-	printf("[main] Rendering scene [%s]\n", kernel->name().c_str());
-
-	// Time the ray tracing
-	auto beginA = std::chrono::high_resolution_clock::now();
-	auto beginB = std::clock();
-
 	// Render the scene and capture the result
 	auto result = kernel->render(*scene, camera);
-
-	// Calculate the elapsed time
-	auto endA = std::chrono::high_resolution_clock::now();
-	auto endB = std::clock();
-	double real = std::chrono::duration_cast<std::chrono::duration<double>>(endA - beginA).count();
-	double cpu = double(endB - beginB) / CLOCKS_PER_SEC;
-	printf("[main] Rendering done (cpu %.3fs, real %.3fs)\n", cpu, real);
 
 	// Export the result to a file
 	exporter->write(*result, "result.ppm");

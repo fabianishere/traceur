@@ -98,6 +98,7 @@ add_executable(traceur-frontend-glut
 
 	src/frontend/glut/main.cpp
 	src/frontend/glut/visitor.cpp
+	src/frontend/glut/observer.cpp
 )
 target_include_directories(traceur-frontend-glut PRIVATE include/)
 target_link_libraries(traceur-frontend-glut traceur-loader-obj traceur-exporter-ppm GLUT::GLUT OpenGL::GLU)

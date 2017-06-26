@@ -28,6 +28,7 @@
 #include <memory>
 
 #include <traceur/core/kernel/film.hpp>
+#include <traceur/core/kernel/observer.hpp>
 #include <traceur/core/scene/scene.hpp>
 #include <traceur/core/scene/camera.hpp>
 
@@ -42,6 +43,16 @@ namespace traceur {
 		 * Deconstruct the {@link Kernel} instance.
 		 */
 		virtual ~Kernel() {}
+
+		/**
+		 * Add an observer to this {@link Kernel} instance.
+		 *
+		 * @param[in] observer The observer to use.
+		 */
+		inline void add_observer(std::shared_ptr<traceur::KernelObserver> observer)
+		{
+			observers.push_back(observer);
+		}
 
 		/**
 		 * Render the camera view of the given {@link Scene} into a
@@ -74,6 +85,12 @@ namespace traceur {
 		 * @return A string representing the name of this kernel.
 		 */
 		virtual const std::string & name() const = 0;
+
+	protected:
+		/**
+		 * The observers of the kernel.
+		 */
+		std::vector<std::shared_ptr<traceur::KernelObserver>> observers;
 	};
 }
 
