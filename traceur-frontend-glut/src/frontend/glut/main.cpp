@@ -50,6 +50,8 @@ const std::string DEFAULT_MODEL_PATH = "assets/dodge.obj";
 // Window settings
 const unsigned int WindowSize_X = 800;  // resolution X
 const unsigned int WindowSize_Y = 800;  // resolution Y
+float near = 0.01f;
+float far = 30f;
 
 /**
  * Initialises the front-end.
@@ -89,7 +91,7 @@ void render()
 	// Set up the camera
 	traceur::Camera camera = traceur::Camera(viewport)
 			.lookAt(getCameraPosition(), getCameraDirection(), getCameraUp())
-			.perspective(glm::radians(50.f), 1, 0.01, 10);
+			.perspective(glm::radians(50.f), viewport.z / viewport.w, near, far);
 
 	printf("[main] Rendering scene [%s]\n", kernel->name().c_str());
 
@@ -322,11 +324,11 @@ void computeRefraction(const traceur::Ray &ray, const traceur::Hit &hit, int dep
 
 	if(glm::dot(hit.normal, ray.direction) < 0.f) {
 		// enter material
-		sourceDestRefraction = 1.f / hit.primitive->material->optical_density;
+		sourceDestRefraction = 1.f / hit.primitive->material->opticalDensity;
 		refractionNormal = hit.normal;
 	} else {
 		// exit material
-		sourceDestRefraction = hit.primitive->material->optical_density / 1.f;
+		sourceDestRefraction = hit.primitive->material->opticalDensity / 1.f;
 		refractionNormal = - hit.normal;
 	}
 
