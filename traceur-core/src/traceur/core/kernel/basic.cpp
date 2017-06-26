@@ -29,37 +29,114 @@ traceur::Pixel traceur::BasicKernel::shade(const traceur::TracingContext &contex
 										   int depth) const
 {
 	auto result = traceur::Pixel(0, 0, 0);
+    float ambientLight = 0.2f;
+    int maxDepth = 8;
+
 	auto &material = context.hit.primitive->material;
 
-	for (auto &light : context.scene.lights) {
-		auto lightDir = glm::normalize(light - context.hit.position);
+    if (material->illuminationModel > 0 && material->illuminationModel < 10) {
+        // Ambient light
+        result = material->ambient * ambientLight;
 
-		result += material->ambient * 0.2f;
-		result += diffuse(context, lightDir);
-		result += specular(context, lightDir);
-	}
+        // Setting up loop-over variables
+        glm::vec3 diffuseReflectanceMultiples = glm::vec3(0,0,0);
+        glm::vec3 specularReflectanceMultiples = glm::vec3(0,0,0);
 
-	// Only run on reflection modes
-	if (material->illumination_model > 2) {
-		if (depth < 8) {
-			result += material->shininess * reflection(context, depth + 1);
-		}
-	}
+        // For each light
+        for (auto &light : context.scene.lights) {
+            auto lightDir = glm::normalize(light - context.hit.position);
 
-    // Only run on refraction modes
-    if (material->illumination_model > 3) {
-        if (depth < 8) {
-            result += material->transparency * refraction(context, depth + 1);
+            // Diffuse illumination model using Lambertian shading
+            diffuseReflectanceMultiples += diffuse(context, lightDir);
+
+            // Specular illumination model
+            switch (material->illuminationModel) {
+                case 2:
+                case 3:
+                case 4:
+                case 6:
+                case 8:
+                case 9:
+                    // Specular * ( {SUM specular() } ) : 2
+                    // Specular * ( {SUM specular() } + reflection() ) : 3, 4, 6, 8, 9
+                    specularReflectanceMultiples += specular(context, lightDir);
+                    break;
+                case 5:
+                case 7:
+                    // Specular * ( {SUM specular() * fresnelLight()} + fresnelFinal() ) : 5, 7
+                    break;
+                default:
+                    break;
+            }
+
         }
+
+        // Finalising loop-over variables
+        switch (material->illuminationModel) {
+            case 3:
+            case 4:
+            case 6:
+            case 8:
+            case 9:
+                // Specular * ( {SUM specular() } + reflection() ) : 3, 4, 6, 8, 9
+                if (depth < maxDepth) {
+                    specularReflectanceMultiples += reflection(context, depth + 1);
+                }
+                break;
+            case 5:
+            case 7:
+                // Specular * ( {SUM specular() * fresnelLight()} + fresnelFinal() ) : 5, 7
+                break;
+            default:
+                break;
+        }
+
+        // Multiplying loop-over variables with multipliers
+        diffuseReflectanceMultiples *= material->diffuse;
+        specularReflectanceMultiples *= material->specular;
+
+        // Add finalised values to result
+        result += diffuseReflectanceMultiples;
+        result += specularReflectanceMultiples;
+
+        // Handling transparent objects
+        switch (material->illuminationModel) {
+            case 4:
+                // Transparency mode
+                if (depth < maxDepth) {
+                    result *= 1.f - material->transparency;
+                    result += material->transparency * transparent(context, depth + 1);
+                }
+                break;
+            case 6:
+                // Basic refraction
+                // (1.0 - mat.specular) mat.transmissionFilter * refraction() : 6
+                if (depth < maxDepth) {
+                    result += (1.f - material->specular) * material->transmissionFilter * refraction(context, depth + 1);
+                }
+                break;
+            case 7:
+                // Fresnel refraction
+                // (1.0 - Kx)Ft (N*V,(1.0-mat.specular),mat.shininess)mat.transmissionFilter * refraction() : 7
+                break;
+            default:
+                break;
+        }
+
+    } else {
+        // Direct color output on illuminationModel 0
+        result = material->diffuse;
     }
 
-	return glm::clamp(result, 0.f, 1.f);
+    // Return final value
+    return glm::clamp(result, 0.f, 1.f);
 }
+
 traceur::Pixel traceur::BasicKernel::diffuse(const traceur::TracingContext &context,
 											 const glm::vec3 &lightDir) const
 {
 	float intensity = std::max(0.f, glm::dot(context.hit.normal, lightDir));
-	return intensity * context.hit.primitive->material->diffuse;
+	return intensity * glm::vec3(1,1,1);
 }
 
 traceur::Pixel traceur::BasicKernel::specular(const traceur::TracingContext &context,
@@ -75,7 +152,7 @@ traceur::Pixel traceur::BasicKernel::specular(const traceur::TracingContext &con
 	float angle = std::max(0.f, glm::dot(viewDir, reflection));
 	float intensity = powf(angle, material->shininess * 1000);
 
-	return intensity * hit.primitive->material->specular;
+	return intensity * glm::vec3(1,1,1);
 }
 
 traceur::Pixel traceur::BasicKernel::reflection(const traceur::TracingContext &context,
@@ -88,7 +165,7 @@ traceur::Pixel traceur::BasicKernel::reflection(const traceur::TracingContext &c
                                                  int depth, const glm::vec3 &normal) const
 {
     glm::vec3 newDirection = glm::reflect(context.ray.direction, normal);
-    glm::vec3 newOrigin = context.hit.position + 0.000001f * newDirection;
+    glm::vec3 newOrigin = context.hit.position + globalOffset * newDirection;
 
     auto next = traceur::Ray(newOrigin, newDirection);
     return trace(context.scene, context.camera, next, depth);
@@ -103,11 +180,11 @@ traceur::Pixel traceur::BasicKernel::refraction(const traceur::TracingContext &c
     
     if(glm::dot(context.hit.normal, context.ray.direction) < 0) {
         // enter material
-        sourceDestRefraction = 1.f / context.hit.primitive->material->optical_density;
+        sourceDestRefraction = 1.f / context.hit.primitive->material->opticalDensity;
         refractionNormal = context.hit.normal;
     } else {
         // exit material
-        sourceDestRefraction = context.hit.primitive->material->optical_density / 1.f;
+        sourceDestRefraction = context.hit.primitive->material->opticalDensity / 1.f;
         refractionNormal = - context.hit.normal;
     }
 
@@ -119,11 +196,20 @@ traceur::Pixel traceur::BasicKernel::refraction(const traceur::TracingContext &c
         return reflection(context, depth, refractionNormal);
     }
 
-    glm::vec3 newOrigin = context.hit.position + 0.000001f * newDirection;
+    glm::vec3 newOrigin = context.hit.position + globalOffset * newDirection;
 
     auto next = traceur::Ray(newOrigin, newDirection);
     return trace(context.scene, context.camera, next, depth);
 
+}
+
+traceur::Pixel traceur::BasicKernel::transparent(const traceur::TracingContext &context,
+                                                 int depth) const
+{
+    glm::vec3 newDirection = context.ray.direction;
+    glm::vec3 newOrigin = context.hit.position + globalOffset * newDirection;
+    auto next = traceur::Ray(newOrigin, newDirection);
+    return trace(context.scene, context.camera, next, depth);
 }
 
 /*
