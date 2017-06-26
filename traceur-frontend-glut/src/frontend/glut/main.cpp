@@ -50,8 +50,8 @@ const std::string DEFAULT_MODEL_PATH = "assets/dodge.obj";
 // Window settings
 const unsigned int WindowSize_X = 800;  // resolution X
 const unsigned int WindowSize_Y = 800;  // resolution Y
-float near = 0.01f;
-float far = 30.f;
+const float zNear = 0.01f;
+const float zFar = 30.f;
 
 /**
  * Initialises the front-end.
@@ -91,7 +91,7 @@ void render()
 	// Set up the camera
 	traceur::Camera camera = traceur::Camera(viewport)
 			.lookAt(getCameraPosition(), getCameraDirection(), getCameraUp())
-			.perspective(glm::radians(50.f), viewport.z / viewport.w, near, far);
+			.perspective(glm::radians(50.f), viewport.z / viewport.w, zNear, zFar);
 
 	printf("[main] Rendering scene [%s]\n", kernel->name().c_str());
 
