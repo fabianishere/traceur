@@ -46,8 +46,11 @@ traceur::Pixel traceur::BasicKernel::shade(const traceur::TracingContext &contex
         for (auto &light : context.scene.lights) {
             auto lightDir = glm::normalize(light - context.hit.position);
 
+            // Fetch light level
+            float lightCastIntensity = lightLevel(light, context.hit, context.scene);
+
             // Diffuse illumination model using Lambertian shading
-            diffuseReflectanceMultiples += diffuse(context, lightDir);
+            diffuseReflectanceMultiples += diffuse(context, lightDir) * lightCastIntensity;
 
             // Specular illumination model
             switch (material->illuminationModel) {
@@ -59,7 +62,7 @@ traceur::Pixel traceur::BasicKernel::shade(const traceur::TracingContext &contex
                 case 9:
                     // Specular * ( {SUM specular() } ) : 2
                     // Specular * ( {SUM specular() } + reflection() ) : 3, 4, 6, 8, 9
-                    specularReflectanceMultiples += specular(context, lightDir);
+                    specularReflectanceMultiples += specular(context, lightDir) * lightCastIntensity;
                     break;
                 case 5:
                 case 7:
