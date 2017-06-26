@@ -147,6 +147,11 @@ namespace traceur {
 		int partitions;
 
 		/**
+		 * The range of partitions to render.
+		 */
+		std::pair<int, int> range;
+
+		/**
 		 * Construct a {@link MultithreadedKernel}.
 		 *
 		 * @param[in] kernel The ray-tracing {@link Kernel} to use.
@@ -155,6 +160,17 @@ namespace traceur {
 		 * the render job into.
 		 */
 		MultithreadedKernel(const std::shared_ptr<traceur::Kernel>, int, int);
+
+		/**
+		 * Construct a {@link MultithreadedKernel}.
+		 *
+		 * @param[in] kernel The ray-tracing {@link Kernel} to use.
+		 * @param[in] workers The maximum amount of worker threads to spawn.
+		 * @param[in] partitions The maximum amount of partitions to divide
+		 * the render job into.
+		 * @param[in] range The range of partitions to render.
+		 */
+		MultithreadedKernel(const std::shared_ptr<traceur::Kernel>, int, int, std::pair<int, int>);
 
 		/**
 		 * Render the camera view of the given {@link Scene} into a
