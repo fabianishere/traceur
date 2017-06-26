@@ -34,8 +34,11 @@ namespace traceur {
 	class Film;
 
 	/**
-	 * An observer that observes render jobs running on a kernel. An observer is
-	 * not thread-safe.
+	 * A {@link KernelObserver} observes a {@link Kernel} instance and is
+	 * notified of events happening in the kernel.
+	 *
+	 * A kernel does not provide any synchronisation guarantees for an observer
+	 * and therefore this class is not thread-safe.
 	 */
 	class KernelObserver {
 	public:
@@ -62,10 +65,12 @@ namespace traceur {
 		 * the kernel.
 		 *
 		 * @param[in] kernel The kernel that is rendering the scene.
+		 * @param[in] id The identifier of the partition.
 		 * @param[in] film The {@link Film} the kernel renders the scene on.
 		 * @param[in] offset The offset within the film.
 		 */
 		virtual void partitionStarted(const traceur::Kernel &,
+									  int,
 									  const traceur::Film &,
 									  const glm::ivec2 &) {}
 
@@ -74,10 +79,13 @@ namespace traceur {
 		 * on the kernel.
 		 *
 		 * @param[in] kernel The kernel that is rendering the scene.
+		 * @param[in] id The identifier of the partition.
 		 * @param[in] film The {@link Film} the kernel has rendered the scene on.
 		 * @param[in] offset The offset within the film.
+		 * @param[in] partition The identifier of the partition
 		 */
 		virtual void partitionFinished(const traceur::Kernel &,
+									   int,
 									   const traceur::Film &,
 									   const glm::ivec2 &) {}
 

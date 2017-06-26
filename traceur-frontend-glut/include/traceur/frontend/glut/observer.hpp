@@ -52,10 +52,12 @@ namespace traceur {
 		 * the kernel.
 		 *
 		 * @param[in] kernel The kernel that is rendering the scene.
+		 * @param[in] id The identifier of the partition.
 		 * @param[in] film The {@link Film} the kernel renders the scene on.
 		 * @param[in] offset The offset within the film.
 		 */
 		virtual void partitionStarted(const traceur::Kernel &,
+									  int,
 									  const traceur::Film &,
 									  const glm::ivec2 &) final;
 
@@ -64,10 +66,13 @@ namespace traceur {
 		 * on the kernel.
 		 *
 		 * @param[in] kernel The kernel that is rendering the scene.
+		 * @param[in] id The identifier of the partition.
 		 * @param[in] film The {@link Film} the kernel has rendered the scene on.
 		 * @param[in] offset The offset within the film.
+		 * @param[in] partition The identifier of the partition
 		 */
 		virtual void partitionFinished(const traceur::Kernel &,
+									   int,
 									   const traceur::Film &,
 									   const glm::ivec2 &) final;
 
