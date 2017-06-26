@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -72,6 +72,7 @@ namespace traceur {
 		 * <code>false</code>.
 		 */
 		virtual bool intersect(const traceur::Ray &, traceur::Hit &) const final;
+		virtual bool intersectFirst(const traceur::Ray & ray, traceur::Hit & hit, double oldDistance) const;
 
 		/**
 		 * Accept a {@link SceneGraphVisitor} instance to traverse this scene

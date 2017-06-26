@@ -303,3 +303,48 @@ traceur::Pixel traceur::BasicKernel::trace(const traceur::Scene &scene,
 	// return an empty pixel (0,0,0)
 	return traceur::Pixel();
 }
+
+float traceur::BasicKernel::lightLevel(const traceur::Light &lightSource, const traceur::Hit &hit, const traceur::Scene &scene) const {
+	float resLevel = 0;
+
+	// reset the light source random seed
+	srand(1);
+
+	int fakeSources = 5;
+	for (int i = 0; i < fakeSources; i++) {
+		// run X fake light sources
+
+		float LO = -0.02;
+		float HI = 0.02;
+		float offsetX = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+		float offsetY = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+		float offsetZ = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+
+		float level = localLightLevel(glm::vec3(offsetX, offsetY, offsetZ) + lightSource, hit, scene);
+		resLevel += (level / ((float)fakeSources));
+	}
+
+	return resLevel;
+}
+
+float traceur::BasicKernel::localLightLevel(const traceur::Light &lightSource, const traceur::Hit &hit, const traceur::Scene &scene) const {
+	glm::vec3 origin = lightSource;
+	glm::vec3 direction = hit.position - lightSource;
+	direction = glm::normalize(direction);
+	traceur::Ray newRay = traceur::Ray(origin, direction);
+
+	traceur::Hit foundHit;
+	if (scene.graph->intersectFirst(newRay, foundHit, hit.distance)) {
+		// check if foundHit is equal to hit
+		glm::vec3 res = foundHit.position - hit.position;
+		// epsilon comparison
+		bool nothingBetween = ((abs(res[0]) < 0.001) && (abs(res[1]) < 0.001) && (abs(res[2]) < 0.001));
+		bool inShadow = !nothingBetween;
+
+		if (inShadow) {
+			return 0;
+		}
+		return 1;
+	}
+	return 1;
+}
