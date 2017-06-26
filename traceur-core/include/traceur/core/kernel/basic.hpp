@@ -115,15 +115,35 @@ namespace traceur {
 		traceur::Pixel specular(const traceur::TracingContext &,
 								const glm::vec3 &) const;
 
-		/**
+        /**
+         * Calculate the reflection effect for the given tracing context.
+         *
+         * @param[in] context The context within we are shading.
+         * @param[in] depth The depth of the recursion.
+         * @return The result of the reflection effect.
+         */
+        traceur::Pixel reflection(const traceur::TracingContext &,
+                                  int depth) const;
+
+        /**
 		 * Calculate the reflection effect for the given tracing context.
 		 *
 		 * @param[in] context The context within we are shading.
 		 * @param[in] depth The depth of the recursion.
+         * @param[in] normal The normal to reflect of off.
 		 * @return The result of the reflection effect.
 		 */
-		traceur::Pixel reflection(const traceur::TracingContext &,
-								  int depth) const;
+        traceur::Pixel reflection(const traceur::TracingContext &,
+                                  int depth, const glm::vec3 &) const;
+
+        /**
+         * Calculate the refraction effect for the given tracing context.
+         * @param[in] context The context within we are refracting.
+         * @param[in] depth The depth of the recursion.
+         * @return The result of the refraction effect.
+         */
+		traceur::Pixel refraction(const traceur::TracingContext &,
+                                  int depth) const;
 
 		/**
 		 * Render the camera view of the given {@link Scene} into a
