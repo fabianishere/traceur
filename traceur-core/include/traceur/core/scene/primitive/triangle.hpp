@@ -57,7 +57,7 @@ namespace traceur {
 		/**
 		 * Construct a {@link Triangle} instance.
 		 *
-		 * @param[in] origin The origin location of the sphere.
+		 * @param[in] origin The first vertex of the triangle.
 		 * @param[in] u The vector to the second component.
 		 * @param[in] v The vector to the third component.
 		 * @param[in] material The material of the triangle.
@@ -149,7 +149,7 @@ namespace traceur {
 
 			auto a = (d11 * d20 - d01 * d21) * invDenom;
 			auto b = (d00 * d21 - d01 * d20) * invDenom;
-	
+
 			// Intersection with triangle's plane but outside triangle
 			if (a < -0.000f || b < -0.000f || a + b > 1) {
 				return false;
@@ -164,7 +164,7 @@ namespace traceur {
 		}
 
 		/**
-		 * Accept a {@link SceneGraphVisitor} instance to visit this node in  
+		 * Accept a {@link SceneGraphVisitor} instance to visit this node in
 		 * the graph of the scene.
 		 *
 		 * @param[in] visitor The visitor to accept.
@@ -172,6 +172,16 @@ namespace traceur {
 		inline virtual void accept(traceur::SceneGraphVisitor &visitor) const final
 		{
 			visitor.visit(*this);
+		}
+
+		/**
+		 * Return the midpoint of this node.
+		 *
+		 * @return The midpoint of this node.
+		 */
+		virtual glm::vec3 midpoint() const
+		{
+			return origin + u / 3.f + v / 3.f;
 		}
 
 		/**
@@ -197,12 +207,8 @@ namespace traceur {
 			glm::vec3 min(infinity), max(-infinity);
 
 			for (auto &vertex : {origin, origin + u, origin + v}) {
-				for (int i = 0; i < 3; i++) {
-					if (vertex[i] < min[i])
-						min[i] = vertex[i];
-					if (vertex[i] > max[i])
-						max[i] = vertex[i];
-				}
+				min = glm::min(min, vertex);
+				max = glm::max(max, vertex);
 			}
 			return traceur::Box(min, max, material);
 		}

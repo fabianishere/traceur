@@ -1,8 +1,10 @@
 ﻿  Checking Build System
   CMake does not need to re-run because C:/Users/robin/traceur/build/CMakeFiles/generate.stamp is up-to-date.
-  CMake does not need to re-run because C:/Users/robin/traceur/build/traceur-core/CMakeFiles/generate.stamp is up-to-date.
-  CMake does not need to re-run because C:/Users/robin/traceur/build/traceur-frontend-glut/CMakeFiles/generate.stamp is up-to-date.
-  CMake does not need to re-run because C:/Users/robin/traceur/build/traceur-frontend-glut/deps/freeglut/freeglut/freeglut/CMakeFiles/generate.stamp is up-to-date.
-  CMake does not need to re-run because C:/Users/robin/traceur/build/traceur-frontend-cli/CMakeFiles/generate.stamp is up-to-date.
-  CMake does not need to re-run because C:/Users/robin/traceur/build/traceur-loader-obj/CMakeFiles/generate.stamp is up-to-date.
-  CMake does not need to re-run because C:/Users/robin/traceur/build/traceur-exporter-ppm/CMakeFiles/generate.stamp is up-to-date.
+  CMake is re-running because C:/Users/robin/traceur/build/traceur-core/CMakeFiles/generate.stamp is out-of-date.
+    the file 'C:/Users/robin/traceur/traceur-core/CMakeLists.txt'
+    is newer than 'C:/Users/robin/traceur/build/traceur-core/CMakeFiles/generate.stamp.depend'
+    result='-1'
+  -- Using multi-threading ray-tracing kernels
+  -- Configuring done
+  -- Generating done
+  -- Build files have been written to: C:/Users/robin/traceur/build
