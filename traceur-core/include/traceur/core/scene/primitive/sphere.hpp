@@ -49,9 +49,9 @@ namespace traceur {
 		 * @param[in] radius The radius of the sphere.
 		 * @param[in] material The material of the sphere.
 		 */
-		Sphere(const glm::vec3 &center, double radius, const std::shared_ptr<traceur::Material> &material) :
+		Sphere(const glm::vec3 &center, float radius, const std::shared_ptr<traceur::Material> &material) :
 			Primitive(center, material), radius(radius),
-			box(traceur::Box(center + glm::vec3(radius), center - glm::vec3(radius), material)) {}
+			box(traceur::Box(center - glm::vec3(radius), center + glm::vec3(radius), material)) {}
 
 		/**
 		 * Determine whether the given ray intersects the shape.
@@ -77,13 +77,12 @@ namespace traceur {
 				return false;
 
 			double t1 = b - d;
-			float lambda = t1 > 0 ? t1 : t2;
+			float lambda = static_cast<float>(t1 > 0 ? t1 : t2);
 
 			hit.primitive = this;
 			hit.distance = lambda;
 			hit.position = ray.origin + lambda * ray.direction;
-			hit.normal = glm::normalize((ray.origin - origin) + lambda * ray.direction);
-
+			hit.normal = glm::normalize(hit.position - origin);
 			return true;
 		}
 
