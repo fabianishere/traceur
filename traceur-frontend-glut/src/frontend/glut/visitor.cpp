@@ -70,8 +70,7 @@ void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Triangle &triangle)
 	}
 }
 
-void draw_box(const traceur::Box &box, const glm::vec3 &color)
-{
+void draw_box(const traceur::Box &box, const glm::vec3 &color) {
 	auto min = box.bounding_box().min;
 	auto max = box.bounding_box().max;
 
@@ -110,15 +109,20 @@ void draw_box(const traceur::Box &box, const glm::vec3 &color)
 	glEnd();
 }
 
+
 void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Box &box)
 {
 	draw_box(box, box.material->diffuse);
+
+	if (draw_bounding_box) {
+		visit_bounding_box(box.bounding_box());
+	}
 }
 
 void traceur::OpenGLSceneGraphVisitor::visit_bounding_box(const traceur::Box &box)
 {
 	/* Draw wireframe */
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	draw_box(box, glm::vec3(255, 0, 0));
+	draw_box(box, glm::vec3(0, 1, 0));
 	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 }

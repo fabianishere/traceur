@@ -60,6 +60,14 @@ namespace traceur {
 		 * @param[in] visitor The visitor to accept.
 		 */
 		virtual void accept(traceur::SceneGraphVisitor &) const = 0;
+
+		/**
+		 * Return the amount of nodes in the graph.
+		 * This method is not guaranteed to run in constant time.
+		 *
+		 * @return The size of the graph.
+		 */
+		virtual size_t size() const = 0;
 	};
 }
 

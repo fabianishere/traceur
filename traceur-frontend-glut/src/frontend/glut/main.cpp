@@ -12,6 +12,7 @@
 #include <ctime>
 #include <chrono>
 #include <memory>
+#include <tuple>
 #include <thread>
 
 #include <glm/glm.hpp>
@@ -26,26 +27,10 @@
 
 #include <traceur/frontend/glut/visitor.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include "traqueboule.h"
 
-// This is the main application
-// Most of the code in here, does not need to be modified.
-// It is enough to take a look at the function "drawFrame",
-// in case you want to provide your own different drawing functions
-glm::vec3 MyCameraPosition;
-
-// MyLightPositions stores all the light positions to use
-// for the ray tracing. Please notice, the light that is
-// used for the real-time rendering is NOT one of these,
-// but following the camera instead.
-std::vector<glm::vec3> MyLightPositions;
-
-//temporary variables
-//these are only used to illustrate
-//a simple debug drawing. A ray
-glm::vec3 testRayOrigin;
-glm::vec3 testRayDestination;
 
 // The rendering kernel to use
 std::unique_ptr<traceur::MultithreadedKernel> kernel;
@@ -56,12 +41,17 @@ std::unique_ptr<traceur::OpenGLSceneGraphVisitor> visitor;
 // The exporter we use to export the result
 std::unique_ptr<traceur::Exporter> exporter;
 
+// Test rays
+std::vector<std::tuple<glm::vec3, glm::vec3, const traceur::Primitive *, int>> rays;
+
 // The default model to load
 const std::string DEFAULT_MODEL_PATH = "assets/dodge.obj";
 
 // Window settings
 const unsigned int WindowSize_X = 800;  // resolution X
 const unsigned int WindowSize_Y = 800;  // resolution Y
+float near = 0.01f;
+float far = 30.f;
 
 /**
  * Initialises the front-end.
@@ -70,15 +60,12 @@ const unsigned int WindowSize_Y = 800;  // resolution Y
  */
 void init(std::string &path)
 {
-	//one first move: initialize the first light source
-	//at least ONE light source has to be in the scene!!!
-	//here, we set it to the current location of the camera
-	MyLightPositions.push_back(MyCameraPosition);
-
 	auto factory = traceur::make_factory<traceur::VectorSceneGraphBuilder>();
 	auto loader = std::make_unique<traceur::ObjLoader>(std::move(factory));
 	printf("[main] Loading model at path \"%s\"\n", path.c_str());
 	scene = loader->load(path);
+	scene->lights.push_back(getCameraPosition());
+	printf("[main] Loaded scene with %zu nodes\n", scene->graph->size());
 
 	int threads = std::thread::hardware_concurrency();
 	int partitions = 64;
@@ -104,9 +91,7 @@ void render()
 	// Set up the camera
 	traceur::Camera camera = traceur::Camera(viewport)
 			.lookAt(getCameraPosition(), getCameraDirection(), getCameraUp())
-			.perspective(glm::radians(50.f), 1, 0.01, 10);
-
-	scene->lights = MyLightPositions;
+			.perspective(glm::radians(50.f), viewport.z / viewport.w, near, far);
 
 	printf("[main] Rendering scene [%s]\n", kernel->name().c_str());
 
@@ -144,8 +129,9 @@ void draw()
 	glColor3f(1,1,1);
 	glPointSize(10);
 	glBegin(GL_POINTS);
-	for (int i = 0; i < MyLightPositions.size(); ++i)
-		glVertex3fv(glm::value_ptr(MyLightPositions[i]));
+		for (auto &light : scene->lights) {
+			glVertex3fv(glm::value_ptr(light));
+		}
 	glEnd();
 	glPopAttrib();//restore all GL attributes
 	//The Attrib commands maintain the state.
@@ -157,14 +143,22 @@ void draw()
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	glDisable(GL_LIGHTING);
 	glBegin(GL_LINES);
-	glColor3f(0,1,1);
-	glVertex3f(testRayOrigin[0], testRayOrigin[1], testRayOrigin[2]);
-	glColor3f(0,0,1);
-	glVertex3f(testRayDestination[0], testRayDestination[1], testRayDestination[2]);
+		for (auto &ray : rays) {
+			auto primitive = std::get<2>(ray);
+			if (primitive) {
+				glColor3fv(glm::value_ptr(primitive->material->diffuse));
+			} else {
+				glColor3f(0, 1, std::get<3>(ray) / 25);
+			}
+			glVertex3fv(glm::value_ptr(std::get<0>(ray)));
+			glVertex3fv(glm::value_ptr(std::get<1>(ray)));
+		}
 	glEnd();
 	glPointSize(10);
 	glBegin(GL_POINTS);
-	glVertex3fv(glm::value_ptr(MyLightPositions[0]));
+		for (auto &light : scene->lights) {
+			glVertex3fv(glm::value_ptr(light));
+		}
 	glEnd();
 	glPopAttrib();
 }
@@ -174,7 +168,6 @@ void draw()
  */
 void animate()
 {
-	MyCameraPosition = getCameraPosition();
 	glutPostRedisplay();
 }
 
@@ -207,7 +200,6 @@ int main(int argc, char** argv)
 	glTranslatef(0, 0, -4);
 	tbInitTransform();     // This is for the trackball, please ignore
 	tbHelp();             // idem
-	MyCameraPosition = getCameraPosition();
 
 	// Activate the light following the camera
 	glEnable(GL_LIGHTING);
@@ -291,8 +283,106 @@ void produceRay(int x_I, int y_I, glm::vec3 &origin, glm::vec3 &destination)
 	glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
 	int y_new = viewport[3] - y_I;
 	origin = glm::unProject(glm::vec3(x_I, y_new, 0), model, projection, viewport);
-	destination = glm::unProject(glm::vec3(x_I, y_new, 0), model, projection,
-						  viewport);
+	destination = glm::unProject(glm::vec3(x_I, y_new, 1), model, projection, viewport);
+}
+
+/* Forward Declaration */
+bool computeTestRays(const traceur::Ray &, int);
+
+/**
+ * Computes the reflection ray given the hit context.
+ *
+ * @param[in] ray The ray to use.
+ * @param[in] hit The hit structure to use.
+ * @param[in] depth The depth of the recursion.
+ */
+void computeReflection(const traceur::Ray &ray, const traceur::Hit &hit, int depth)
+{
+	auto reflect = glm::reflect(ray.direction, hit.normal);
+	bool intersects = computeTestRays(traceur::Ray(
+		hit.position + reflect * 0.000001f,
+		reflect
+	), depth + 1);
+
+	// Also show reflection rays that do not intersect a primitive
+	if (!intersects) {
+		rays.emplace_back(hit.position, hit.position + reflect, hit.primitive, depth + 1);
+	}
+}
+
+/**
+ * Computes the refraction ray given the hit context.
+ *
+ * @param[in] ray The ray to use.
+ * @param[in] hit The hit structure to use.
+ * @param[in] depth The depth of the recursion.
+ */
+void computeRefraction(const traceur::Ray &ray, const traceur::Hit &hit, int depth)
+{
+	float sourceDestRefraction;
+	glm::vec3 refractionNormal;
+
+	if(glm::dot(hit.normal, ray.direction) < 0.f) {
+		// enter material
+		sourceDestRefraction = 1.f / hit.primitive->material->opticalDensity;
+		refractionNormal = hit.normal;
+	} else {
+		// exit material
+		sourceDestRefraction = hit.primitive->material->opticalDensity / 1.f;
+		refractionNormal = - hit.normal;
+	}
+
+	glm::vec3 refract = glm::refract(ray.direction, refractionNormal,
+									 sourceDestRefraction);
+
+	if (!glm::isnan(refract).length()) {
+		traceur::Hit next(hit);
+		// Full internal ray reflection
+		next.normal = refractionNormal;
+		return computeReflection(ray, next, depth + 1);
+	}
+	rays.emplace_back(hit.position, hit.position +  0.000001f * refract, hit.primitive, depth);
+}
+
+/**
+ * Computes the test rays to draw given a ray.
+ *
+ * @param[in] ray The ray to use.
+ * @param[in] depth The depth of the recursion.
+ * @return <code>true</code> if there was an intersection, <code>false</code>
+ * otherwise.
+ */
+bool computeTestRays(const traceur::Ray &ray, int depth)
+{
+	/* Allow max recursion depth of ten */
+	if (depth > 10) {
+		return false;
+	}
+
+	traceur::Hit hit;
+	if (scene->graph->intersect(ray, hit)) {
+		rays.emplace_back(ray.origin, hit.position, hit.primitive, depth);
+		computeReflection(ray, hit, depth);
+		computeRefraction(ray, hit, depth);
+		return true;
+	}
+
+	return false;
+}
+
+/**
+ * Computes the test rays for the given position of the screen.
+ *
+ * @param[in] x The x-coordinate on the screen.
+ * @param[in] y The y-coordinate on the screen.
+ */
+void computeTestRays(int x, int y)
+{
+	glm::vec3 origin, destination;
+	// Produce the ray for the current mouse position
+	produceRay(x, y, origin, destination);
+	rays.clear();
+	computeTestRays(traceur::Ray(origin, destination - origin), 0);
 }
 
 /**
@@ -303,10 +393,10 @@ void keyboard(unsigned char key, int x, int y)
     switch (key) {
 	case 'L':
 		// Add/update a light based on the camera position.
-		MyLightPositions.push_back(getCameraPosition());
+		scene->lights.push_back(getCameraPosition());
 		break;
 	case 'l':
-		MyLightPositions[MyLightPositions.size() - 1] = getCameraPosition();
+		scene->lights[scene->lights.size() - 1] = getCameraPosition();
 		break;
 	case 'r':
 		// Render the current scene
@@ -316,11 +406,12 @@ void keyboard(unsigned char key, int x, int y)
 		// Enable/disable bounding boxes visuals
 		visitor->draw_bounding_box = !visitor->draw_bounding_box;
 		break;
+	case 't':
+		// Draw test ray
+		computeTestRays(x, y);
+		break;
 	case 27:
 		exit(0);
 	}
-
-	// Produce the ray for the current mouse position
-	produceRay(x, y, testRayOrigin, testRayDestination);
 }
 

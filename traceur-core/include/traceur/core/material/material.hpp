@@ -36,7 +36,7 @@ namespace traceur {
 		/**
 		 * The diffuse, ambient and specular terms of this material.
 		 */
-		glm::vec3 diffuse, ambient, specular;
+		glm::vec3 diffuse, ambient, specular, transmissionFilter;
 
 		/**
 		 * The specular exponent of the material.
@@ -46,7 +46,7 @@ namespace traceur {
 		/**
 		 * The optical density / index of refraction of the material.
 		 */
-		float optical_density;
+		float opticalDensity;
 
         /**
          * The transparency value (as 0 opaque..1 transparent) of the material.
@@ -56,12 +56,12 @@ namespace traceur {
         /**
          * The illumination model of the material.
          */
-        int illumination_model;
+        int illuminationModel;
 
 		/**
 		 * Construct a {@link Material} instance.
 		 */
-		Material() : shininess(0.f), optical_density(1.f), transparency(0.f), illumination_model(1) {}
+		Material() : shininess(0.f), opticalDensity(1.f), transparency(0.f), illuminationModel(1) {}
 
 		/**
 		 * Construct a {@link Material} instance.
@@ -78,6 +78,7 @@ namespace traceur {
 				const glm::vec3 &diffuse,
 				const glm::vec3 &ambient,
 				const glm::vec3 &specular,
+                const glm::vec3 &transmissionFilter,
                 float shininess,
 				float optical_density,
                 float transparency,
@@ -86,11 +87,13 @@ namespace traceur {
 			diffuse(diffuse),
 			ambient(ambient),
 			specular(specular),
+            transmissionFilter(transmissionFilter),
             shininess(shininess),
-			optical_density(optical_density),
+			opticalDensity(optical_density),
             transparency(transparency),
-            illumination_model(illumination_model) {}
-	};
+            illuminationModel(illumination_model) {}
+
+    };
 }
 
 #endif /* TRACEUR_CORE_MATERIAL_H */

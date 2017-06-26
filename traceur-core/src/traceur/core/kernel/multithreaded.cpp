@@ -26,7 +26,14 @@
 
 traceur::MultithreadedKernel::MultithreadedKernel(const std::shared_ptr<traceur::Kernel> kernel,
 												  int workers, int partitions) :
-	kernel(kernel), workers(workers), partitions(partitions), pool(workers) {}
+	kernel(kernel), workers(workers), partitions(partitions),
+	range(std::make_pair<int, int>(0, partitions - 1)), pool(workers) {}
+
+traceur::MultithreadedKernel::MultithreadedKernel(const std::shared_ptr<traceur::Kernel> kernel,
+												  int workers, int partitions,
+												  std::pair<int, int> range) :
+	kernel(kernel), workers(workers), partitions(partitions),
+	range(range), pool(workers) {}
 
 std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(
 		const traceur::Scene &scene,
@@ -42,7 +49,7 @@ std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(
 	auto jobs = std::queue<std::future<void>>();
 
 	/* Enqueue render jobs */
-	for (int i = 0; i < film->n; i++) {
+	for (int i = range.first; i < range.second; i++) {
 		auto &partition = film->operator()(i);
 		auto offset = film->offset(i);
 
