@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -48,6 +48,36 @@ inline bool traceur::VectorSceneGraph::intersect(const traceur::Ray &ray, traceu
 			nearest = hit;
 			dist = hit.distance;
 			intersection = true;
+		}
+	}
+
+	hit = nearest;
+	return intersection;
+}
+
+inline bool traceur::VectorSceneGraph::intersectFirst(const traceur::Ray &ray, traceur::Hit &hit, double oldDistance) const
+{
+	/* Test if ray intersects the bounding box of the scene graph */
+	if (!box.intersect(ray, hit)) {
+		return false;
+	}
+
+	traceur::Hit nearest;
+	bool intersection = false;
+
+	for (auto &primitive : *nodes) {
+		/* Test if ray intersects bounding box of primitive */
+		if (!primitive->bounding_box().intersect(ray, hit)) {
+			continue;
+		}
+
+		/* Test if ray intersects primitive */
+		if (primitive->intersect(ray, hit)) {
+			if (hit.distance < oldDistance) {
+				nearest = hit;
+				intersection = true;
+				break;
+			}
 		}
 	}
 

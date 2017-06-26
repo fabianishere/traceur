@@ -88,6 +88,10 @@ namespace traceur {
 							 const traceur::Ray &,
 							 int) const;
 
+		float lightLevel(const traceur::Light & lightSource, const traceur::Hit & hit, const traceur::Scene & scene) const;
+
+		float localLightLevel(const traceur::Light & lightSource, const traceur::Hit & hit, const traceur::Scene & scene) const;
+
 		/**
 		 * Shade a pixel with a given {@link Hit}.
 		 *

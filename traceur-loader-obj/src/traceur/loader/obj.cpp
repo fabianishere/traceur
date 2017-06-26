@@ -284,9 +284,6 @@ bool traceur::ObjLoader::loadMaterials(const std::string &path, std::map<std::st
 		else if (strncmp(line, "Ns ", 3) == 0) {
 			sscanf(line, "Ns %f", &f1);
 			// The range of shininess (reflectivty) is between 0 and 1000
-			if (f1 > 0) {
-				f1 = f1 / 1000;
-			}
 			mat.shininess = f1;
 		}
         // Optical density / index of refraction [0.001..10] (n 1.0)

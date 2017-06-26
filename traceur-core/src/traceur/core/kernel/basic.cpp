@@ -24,6 +24,8 @@
 
 #include <traceur/core/kernel/basic.hpp>
 #include <traceur/core/scene/primitive/primitive.hpp>
+#include <iostream>
+#include <glm/gtx/string_cast.hpp>
 
 traceur::Pixel traceur::BasicKernel::shade(const traceur::TracingContext &context,
 										   int depth) const
@@ -46,8 +48,14 @@ traceur::Pixel traceur::BasicKernel::shade(const traceur::TracingContext &contex
         for (auto &light : context.scene.lights) {
             auto lightDir = glm::normalize(light - context.hit.position);
 
+            // Fetch light level
+            float lightCastIntensity = lightLevel(light, context.hit, context.scene);
+
+            // Give lightLevel as raw output for the first light:
+            // return glm::vec3(1,1,1) * lightCastIntensity;
+
             // Diffuse illumination model using Lambertian shading
-            diffuseReflectanceMultiples += diffuse(context, lightDir);
+            diffuseReflectanceMultiples += diffuse(context, lightDir) * lightCastIntensity;
 
             // Specular illumination model
             switch (material->illuminationModel) {
@@ -59,7 +67,7 @@ traceur::Pixel traceur::BasicKernel::shade(const traceur::TracingContext &contex
                 case 9:
                     // Specular * ( {SUM specular() } ) : 2
                     // Specular * ( {SUM specular() } + reflection() ) : 3, 4, 6, 8, 9
-                    specularReflectanceMultiples += specular(context, lightDir);
+                    specularReflectanceMultiples += specular(context, lightDir) * lightCastIntensity;
                     break;
                 case 5:
                 case 7:
@@ -160,7 +168,7 @@ traceur::Pixel traceur::BasicKernel::specular(const traceur::TracingContext &con
 	auto reflection = glm::reflect(context.ray.direction, hit.normal);
 
 	float angle = std::max(0.f, glm::dot(viewDir, reflection));
-	float intensity = powf(angle, material->shininess * 1000);
+	float intensity = powf(angle, material->shininess);
 
 	return intensity * glm::vec3(1,1,1);
 }
@@ -314,4 +322,50 @@ traceur::Pixel traceur::BasicKernel::trace(const traceur::Scene &scene,
 
 	// return an empty pixel (0,0,0)
 	return traceur::Pixel();
+}
+
+float traceur::BasicKernel::lightLevel(const traceur::Light &lightSource, const traceur::Hit &hit, const traceur::Scene &scene) const {
+    float resLevel = 0;
+    
+    srand(1);
+    for (int i = 0; i < 50; i++) {
+        // run X fake light sources
+
+        float LO = -0.05;
+        float HI = 0.05;
+        float offsetX = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+        float offsetY = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+        float offsetZ = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+
+        float level = localLightLevel(glm::vec3(offsetX, offsetY, offsetZ) + lightSource, hit, scene);
+        resLevel += (level / ((float)50));
+    }
+
+    return resLevel;
+}
+
+float traceur::BasicKernel::localLightLevel(const traceur::Light &lightSource, const traceur::Hit &hit, const traceur::Scene &scene) const{
+    // Can be optimized by having a different intersect method that returns false upon first impact that is closer than the light.
+
+    glm::vec3 origin = lightSource;
+    glm::vec3 direction = hit.position - lightSource;
+    direction = glm::normalize(direction);
+    traceur::Ray newRay = traceur::Ray(origin, direction);
+
+    traceur::Hit foundHit;
+    if (scene.graph->intersect(newRay, foundHit)) {
+        // check if foundHit is equal to hit
+        glm::vec3 res = foundHit.position - hit.position;
+        // epsilon comparison
+
+
+        bool nothingBetween = ((std::abs(res[0]) < 0.001) && (std::abs(res[1]) < 0.001) && (std::abs(res[2]) < 0.001));
+        bool inShadow = !nothingBetween;
+
+        if (inShadow) {
+            return 0;
+        }
+        return 1;
+    }
+    return 1;
 }
