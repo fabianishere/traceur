@@ -22,6 +22,8 @@
  * THE SOFTWARE.
  */
 
+#include <ctime>
+#include <chrono>
 #include <map>
 #include <stdio.h>
 
