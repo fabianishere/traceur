@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -26,7 +26,8 @@
 #include <iostream>
 #include <glm/gtx/string_cast.hpp>
 
-inline bool traceur::VectorSceneGraph::intersect(const traceur::Ray &ray, traceur::Hit &hit) const
+bool traceur::VectorSceneGraph::intersect(const traceur::Ray &ray,
+										  traceur::Hit &hit) const
 {
 	/* Test if ray intersects the bounding box of the scene graph */
 	if (!box.intersect(ray, hit)) {
@@ -65,6 +66,11 @@ void traceur::VectorSceneGraph::accept(traceur::SceneGraphVisitor &visitor) cons
 	for (auto &primitive : nodes) {
 		primitive->accept(visitor);
 	}
+}
+
+size_t traceur::VectorSceneGraph::size() const
+{
+	return nodes.size();
 }
 
 void traceur::VectorSceneGraphBuilder::add(const std::shared_ptr<traceur::Primitive> primitive)

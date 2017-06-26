@@ -75,6 +75,7 @@ bool traceur::KDTreeNode::intersect(const traceur::Ray &ray, traceur::Hit &hit) 
 	return false;
 }
 
+
 void traceur::KDTreeNode::accept(traceur::SceneGraphVisitor &visitor) const
 {
 	visitor.visit(*this);
@@ -134,7 +135,7 @@ std::unique_ptr<traceur::KDTreeNode> traceur::KDTreeSceneGraphBuilder::build(
 	}
 
 	/* Do not create too small nodes */
-	if (depth > 5 || primitives.size() <= 200) {
+	if (depth > 5 || primitives.size() <= 100) {
 		return std::move(node);
 	}
 
@@ -158,5 +159,11 @@ std::unique_ptr<traceur::KDTreeNode> traceur::KDTreeSceneGraphBuilder::build(
 
 std::unique_ptr<traceur::SceneGraph> traceur::KDTreeSceneGraphBuilder::build() const
 {
-	return std::make_unique<traceur::KDTreeSceneGraph>(build(primitives, 0));
+	return std::make_unique<traceur::KDTreeSceneGraph>(build(primitives, 0), primitives.size());
 }
+
+size_t traceur::KDTreeSceneGraph::size() const
+{
+	return nodes;
+}
+

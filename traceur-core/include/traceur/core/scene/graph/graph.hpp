@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -42,8 +42,8 @@ namespace traceur {
 		virtual ~SceneGraph() {}
 
 		/**
-		 * Determine whether the given ray intersects a shape in the geometry
-		 * of this graph.
+		 * Determine which primitive the given ray intersects in the
+		 * geometry of this graph.
 		 *
 		 * @param[in] ray The ray to intersect with a shape.
 		 * @param[in] hit The intersection structure to which the details will
@@ -51,7 +51,7 @@ namespace traceur {
 		 * @return <code>true</code> if a shape intersects the ray, otherwise
 		 * <code>false</code>.
 		 */
-		inline virtual bool intersect(const traceur::Ray &, traceur::Hit &) const = 0;
+		virtual bool intersect(const traceur::Ray &, traceur::Hit &) const = 0;
 
 		/**
 		 * Accept a {@link SceneGraphVisitor} instance to traverse this scene
@@ -60,6 +60,14 @@ namespace traceur {
 		 * @param[in] visitor The visitor to accept.
 		 */
 		virtual void accept(traceur::SceneGraphVisitor &) const = 0;
+
+		/**
+		 * Return the amount of nodes in the graph.
+		 * This method is not guaranteed to run in constant time.
+		 *
+		 * @return The size of the graph.
+		 */
+		virtual size_t size() const = 0;
 	};
 }
 

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Traceur authors
@@ -79,6 +79,14 @@ namespace traceur {
 		 * @param[in] visitor The visitor to accept.
 		 */
 		virtual void accept(traceur::SceneGraphVisitor &) const final;
+
+		/**
+		 * Return the amount of nodes in the graph.
+		 * This method is not guaranteed to run in constant time.
+		 *
+		 * @return The size of the graph.
+		 */
+		virtual size_t size() const final;
 
 		/**
 		 * Return the bounding {@link Box} which encapsulates the whole node.

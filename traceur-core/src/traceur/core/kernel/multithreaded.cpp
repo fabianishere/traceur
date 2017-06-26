@@ -26,12 +26,24 @@
 
 traceur::MultithreadedKernel::MultithreadedKernel(const std::shared_ptr<traceur::Kernel> kernel,
 												  int workers, int partitions) :
-	kernel(kernel), workers(workers), partitions(partitions), pool(workers) {}
+	kernel(kernel), workers(workers), partitions(partitions),
+	range(std::pair<int, int>(0, partitions)), pool(workers) {}
+
+traceur::MultithreadedKernel::MultithreadedKernel(const std::shared_ptr<traceur::Kernel> kernel,
+												  int workers, int partitions,
+												  std::pair<int, int> range) :
+	kernel(kernel), workers(workers), partitions(partitions),
+	range(range), pool(workers) {}
 
 std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(
 		const traceur::Scene &scene,
 		const traceur::Camera &camera) const
 {
+	/* Notify observers about start */
+	for (auto &observer : observers) {
+		observer->renderStarted(*this, scene, camera, partitions);
+	}
+
 	/* Create a partitioned film for the render job */
 	auto film = std::make_unique<traceur::PartitionedFilm<traceur::DirectFilm>>(
 			camera.viewport[2],
@@ -42,13 +54,23 @@ std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(
 	auto jobs = std::queue<std::future<void>>();
 
 	/* Enqueue render jobs */
-	for (int i = 0; i < film->n; i++) {
-		auto &partition = film->operator()(i);
-		auto offset = film->offset(i);
+	for (int i = range.first; i < range.second; i++) {
+		jobs.emplace(pool.enqueue([&, i]() {
+			auto &partition = film->operator()(i);
+			auto offset = film->offset(i);
 
-		jobs.emplace(pool.enqueue([&](const glm::ivec2 &offset) {
-			this->kernel->render(scene, camera, partition, offset);
-		}, offset));
+			/* Notify observers about start */
+			for (auto &observer : observers) {
+				observer->partitionStarted(*this, partition, offset);
+			}
+			/* Render the partition */
+			kernel->render(scene, camera, partition, offset);
+
+			/* Notify observers about finish */
+			for (auto &observer : observers) {
+				observer->partitionFinished(*this, partition, offset);
+			}
+		}));
 	}
 
 	/* Wait for all render jobs to finish */
@@ -57,6 +79,12 @@ std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(
 		jobs.pop();
 		job.wait();
 	}
+
+	/* Notify observers about finish */
+	for (auto &observer : observers) {
+		observer->renderFinished(*this, *film);
+	}
+
 	return std::move(film);
 }
 

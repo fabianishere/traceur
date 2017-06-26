@@ -87,7 +87,7 @@ namespace traceur {
 		 * @return <code>true</code> if a shape intersects the ray, otherwise
 		 * <code>false</code>.
 		 */
-		inline virtual bool intersect(const traceur::Ray &, traceur::Hit &) const final;
+		virtual bool intersect(const traceur::Ray &, traceur::Hit &) const final;
 
 		/**
 		 * Accept a {@link SceneGraphVisitor} instance to visit this node in
@@ -115,13 +115,18 @@ namespace traceur {
 		 * The root node of this tree.
 		 */
 		std::unique_ptr<traceur::KDTreeNode> root;
+
+		/**
+		 * The nodes in the tree.
+		 */
+		size_t nodes;
 	public:
 		/**
 		 * Construct a {@link KDTreeSceneGraph} instance.
 		 *
 		 * @param[in] root The root node of the tree.
 		 */
-		KDTreeSceneGraph(std::unique_ptr<traceur::KDTreeNode> root) : root(std::move(root)) {}
+		KDTreeSceneGraph(std::unique_ptr<traceur::KDTreeNode> root, int nodes) : root(std::move(root)), nodes(nodes) {}
 
 		/**
 		 * Determine whether the given ray intersects a node in the geometry
@@ -134,6 +139,14 @@ namespace traceur {
 		 * <code>false</code>.
 		 */
 		virtual bool intersect(const traceur::Ray &, traceur::Hit &) const final;
+
+		/**
+		 * Return the amount of nodes in the graph.
+		 * This method is not guaranteed to run in constant time.
+		 *
+		 * @return The size of the graph.
+		 */
+		virtual size_t size() const final;
 
 		/**
 		 * Accept a {@link SceneGraphVisitor} instance to traverse this scene

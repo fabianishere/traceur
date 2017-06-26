@@ -53,6 +53,7 @@ int main(int argc, char** argv)
 	int height = 800;
 	int workers = std::thread::hardware_concurrency();
 	int partitions = 64;
+	std::pair<int, int> range = std::pair<int, int>(0, partitions);
 
 
 	// Set camera directions
@@ -61,7 +62,8 @@ int main(int argc, char** argv)
 	glm::vec3 up = glm::vec3(0, 1, 0);
 
 	float x = 0.f, y = 0.f, z = 0.f;
-	while ((c = getopt(argc, argv, "w:h:e:c:u:N:p:")) != -1) {
+	int a = 0, b = 0;
+	while ((c = getopt(argc, argv, "w:h:e:c:u:N:p:r:")) != -1) {
 		switch(c) {
 			case 'w':
 				width = atoi(optarg);
@@ -75,6 +77,9 @@ int main(int argc, char** argv)
 			case 'p':
 				partitions = atoi(optarg);
 				break;
+			case 'r':
+				sscanf(optarg, "(%d, %d)", &a, &b);
+				range = std::pair<int, int>(a, b);
 			case 'e':
 				sscanf(optarg, "(%f, %f, %f)", &x, &y, &z);
 				eye = glm::vec3(x, y, z);
@@ -100,7 +105,7 @@ int main(int argc, char** argv)
 	/* Tracing and scheduling kernels */
 	auto tracer = std::make_unique<traceur::BasicKernel>();
 	auto scheduler = std::make_unique<traceur::MultithreadedKernel>(
-		std::move(tracer), workers, partitions
+		std::move(tracer), workers, partitions, range
 	);
 
 	// Set up viewport
