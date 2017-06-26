@@ -86,6 +86,11 @@ traceur::Pixel traceur::BasicKernel::shade(const traceur::TracingContext &contex
             case 5:
             case 7:
                 // Specular * ( {SUM specular() * fresnelLight()} + fresnelFinal() ) : 5, 7
+
+                // Todo: replace this fallback! This is not Fresnel reflection but normal reflection
+                if (depth < maxDepth) {
+                    specularReflectanceMultiples += reflection(context, depth + 1);
+                }
                 break;
             default:
                 break;
@@ -118,6 +123,11 @@ traceur::Pixel traceur::BasicKernel::shade(const traceur::TracingContext &contex
             case 7:
                 // Fresnel refraction
                 // (1.0 - Kx)Ft (N*V,(1.0-mat.specular),mat.shininess)mat.transmissionFilter * refraction() : 7
+
+                // Todo: replace this fallback! This is not Fresnel refraction but normal refraction
+                if (depth < maxDepth) {
+                    result += (1.f - material->specular) * material->transmissionFilter * refraction(context, depth + 1);
+                }
                 break;
             default:
                 break;
