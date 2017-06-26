@@ -12,6 +12,7 @@
 #include <ctime>
 #include <chrono>
 #include <memory>
+#include <thread>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -80,7 +81,14 @@ void init(std::string &path)
 	printf("[main] Loading model at path \"%s\"\n", path.c_str());
 	scene = loader->load(path);
 
-	kernel = std::make_unique<traceur::MultithreadedKernel>(std::make_shared<traceur::BasicKernel>(), 16);
+	int threads = std::thread::hardware_concurrency();
+	int partitions = 64;
+
+	kernel = std::make_unique<traceur::MultithreadedKernel>(
+		std::make_shared<traceur::BasicKernel>(),
+		threads,
+		partitions
+	);
 	visitor = std::make_unique<traceur::OpenGLSceneGraphVisitor>(false);
 	exporter = std::make_unique<traceur::PPMExporter>();
 }
