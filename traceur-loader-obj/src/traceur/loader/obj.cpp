@@ -45,6 +45,7 @@ std::unique_ptr<traceur::Scene> traceur::ObjLoader::load(const std::string
 			glm::vec3(0.f, 0.f, 0.f),   /* Ambient */
 			glm::vec3(0.5f, 0.5f, 0.5f),/* Diffuse */
 			glm::vec3(0.5f, 0.5f, 0.5f),/* Specular */
+            glm::vec3(0.f, 0.f, 0.f),   /* Transmission Filter */
 			96.7f,                      /* Shininess */
             1.f,                        /* Optical density / refractory index */
             0.f,                        /* Transparency */
@@ -269,11 +270,16 @@ bool traceur::ObjLoader::loadMaterials(const std::string &path, std::map<std::st
 			sscanf(line, "Ka %f %f %f", &f1, &f2, &f3);
 			mat.ambient = glm::vec3(f1, f2, f3);
 		}
-		// Specular color
-		else if (strncmp(line, "Ks ", 3) == 0) {
-			sscanf(line, "Ks %f %f %f", &f1, &f2, &f3);
-			mat.specular = glm::vec3(f1, f2, f3);
-		}
+        // Specular color
+        else if (strncmp(line, "Ks ", 3) == 0) {
+            sscanf(line, "Ks %f %f %f", &f1, &f2, &f3);
+            mat.specular = glm::vec3(f1, f2, f3);
+        }
+        // Transmission filter
+        else if (strncmp(line, "Tf ", 3) == 0) {
+            sscanf(line, "Tf %f %f %f", &f1, &f2, &f3);
+            mat.transmissionFilter = glm::vec3(f1, f2, f3);
+        }
 		// Shininess [0..200]
 		else if (strncmp(line, "Ns ", 3) == 0) {
 			sscanf(line, "Ns %f", &f1);
@@ -287,13 +293,13 @@ bool traceur::ObjLoader::loadMaterials(const std::string &path, std::map<std::st
         // Less than 1.0 produces unrealistic results.
 		else if (strncmp(line, "Ni ", 3) == 0) {
 			sscanf(line, "Ni %f", &f1);
-			mat.optical_density = f1;
+			mat.opticalDensity = f1;
 		}
 		// Diffuse/specular shading model [0..10]
 		else if (strncmp(line, "illum ", 6)==0) {
 			int illum = -1;
 			sscanf(line, "illum %i", &illum);
-			mat.illumination_model = illum;
+			mat.illuminationModel = illum;
 		}
 		// map images
 		else if (strncmp(line, "map_Kd ",7) == 0) {
@@ -316,11 +322,11 @@ bool traceur::ObjLoader::loadMaterials(const std::string &path, std::map<std::st
 			sscanf(line, "Tr %f", &f1);
 			mat.transparency = f1;
 		}
-		// transparency value
-		else if (strncmp(line, "d ", 2) == 0 ) {
-			sscanf(line, "d %f", &f1);
-			mat.transparency = 1.f - f1;
-		}
+        // transparency value
+        else if (strncmp(line, "d ", 2) == 0 ) {
+            sscanf(line, "d %f", &f1);
+            mat.transparency = 1.f - f1;
+        }
 
 		if (feof(in) && indef && !key.empty()) {
 			if (!materials.count(key)) {
