@@ -105,27 +105,6 @@ traceur::Pixel traceur::BasicKernel::blinnPhong(const traceur::Hit &hit, const t
 	float specularity = pow(dot, hit.primitive->material->shininess*1000);
 
 	return specularity * hit.primitive->material->specular;
-	/*glm::vec3 viewDir = scene.camera.position - vertexPos;
-	viewDir = glm::normalize(viewDir);
-
-
-	float specularity = 0.0f;
-	if (glm::dot(hit.normal, lightDir) > 0) {
-		glm::vec3 halfVector = glm::normalize(lightDir + viewDir);
-		specularity = pow(glm::dot(hit.normal, halfVector), hit.primitive->material->shininess*1000);
-	}
-	return hit.primitive->material->specular * specularity * hit.primitive->material->diffuse;
-	*/
-	/*glm::vec3 halfVector = viewDir + lightDir;
-	halfVector = glm::normalize(halfVector);
-
-	float specularity = std::max(glm::dot(halfVector, hit.normal), 0.0f);
-	if (specularity > 0) {
-		specularity = pow(specularity, (hit.primitive->material->shininess));
-		return specularity * hit.primitive->material->specular;
-	}
-	return traceur::Pixel(0, 0, 0);*/
-
 }
 
 traceur::Pixel traceur::BasicKernel::reflectionOnly(const traceur::Hit &hit, const traceur::Scene &scene, const traceur::Ray &ray, const glm::vec3 &vertexPos, int recursion) const {
@@ -151,17 +130,17 @@ void traceur::BasicKernel::Offset(glm::vec3* inter, glm::vec3* dest) const{
 
 float traceur::BasicKernel::lightLevel(const traceur::Light &lightSource, const traceur::Hit &hit, const traceur::Scene &scene) const {
 	float resLevel = 0;
-	for (int i = 0; i < 10; i++) {
-		// run X fake light sources
+	for (int i = 0; i < 50; i++) {
+			// run X fake light sources
 
-		float LO = -0.15;
-		float HI = 0.15;
-		float offsetX = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
-		float offsetY = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
-		float offsetZ = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+			float LO = -0.05;
+			float HI = 0.05;
+			float offsetX = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+			float offsetY = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+			float offsetZ = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
 
-		float level = localLightLevel(glm::vec3(offsetX, offsetY, offsetZ) + lightSource, hit, scene);
-		resLevel += (level / ((float)10));
+			float level = localLightLevel(glm::vec3(offsetX, offsetY, offsetZ) + lightSource, hit, scene);
+			resLevel += (level / ((float)50));
 	}
 
 	return resLevel;
@@ -222,10 +201,6 @@ void traceur::BasicKernel::render(const traceur::Scene &scene,
 {
 	traceur::Ray ray;
 	traceur::Pixel pixel;
-	/*printf("X%d\n", offset[0]);
-	printf("Y%d\n", offset[1]);
-	printf("Height%d\n", film.height);
-	printf("Width%d\n", film.width);*/
 
 	// loop through all pixels on the film
 	// for performance, loop over y first
