@@ -28,6 +28,9 @@
 #include <traceur/core/kernel/pixel.hpp>
 
 namespace traceur {
+
+    const float globalOffset = 0.00001f;
+
 	/**
 	 * This struct represents the ray-tracing context of the kernel.
 	 */
@@ -143,6 +146,15 @@ namespace traceur {
          * @return The result of the refraction effect.
          */
 		traceur::Pixel refraction(const traceur::TracingContext &,
+                                  int depth) const;
+
+        /**
+         * Calculate the transparency effect for the given tracing context.
+         * @param[in] context The context within we are transparent.
+         * @param[in] depth The depth of the recursion.
+         * @return The result of the refraction effect.
+         */
+        traceur::Pixel transparent(const traceur::TracingContext &,
                                   int depth) const;
 
 		/**
