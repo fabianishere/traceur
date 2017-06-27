@@ -30,7 +30,7 @@
 
 namespace traceur {
 	/**
-	 * A visitor of the {@link SceneGraph} that traverses the graph and draws
+	 * A visitor of the {@link SceneGraph} that traverses the graph and renders
 	 * all elements of the scene into an OpenGL window.
 	 */
 	class OpenGLSceneGraphVisitor: public SceneGraphVisitor {

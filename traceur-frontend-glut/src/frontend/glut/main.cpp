@@ -26,8 +26,8 @@
 #include <traceur/loader/obj.hpp>
 #include <traceur/exporter/ppm.hpp>
 
-#include <traceur/frontend/glut/visitor.hpp>
-#include <traceur/frontend/glut/observer.hpp>
+#include <traceur/frontend/glut/renderer.hpp>
+#include <traceur/frontend/glut/progress.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 
@@ -87,7 +87,7 @@ void init(std::string &path)
 	);
 	visitor = std::make_unique<traceur::OpenGLSceneGraphVisitor>(false);
 	exporter = std::make_unique<traceur::PPMExporter>();
-	kernel->add_observer(std::make_shared<traceur::ProgressObserver>());
+	kernel->add_observer(std::make_shared<traceur::ConsoleProgressObserver>(30));
 }
 
 /**

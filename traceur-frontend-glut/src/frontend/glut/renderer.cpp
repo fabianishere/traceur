@@ -30,7 +30,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <traceur/frontend/glut/visitor.hpp>
+#include <traceur/frontend/glut/renderer.hpp>
 
 
 void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Node &node) {
