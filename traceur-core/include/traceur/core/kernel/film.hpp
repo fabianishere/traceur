@@ -67,7 +67,7 @@ namespace traceur {
 		 * @param[in] pos The position within the film.
 		 * @return A reference to the {@link Pixel}.
 		 */
-		inline virtual traceur::Pixel & operator()(const glm::ivec2 &) = 0;
+		virtual traceur::Pixel & operator()(const glm::ivec2 &) = 0;
 
 		/**
 		 * Return the reference to a {@link Pixel} in this film.
@@ -76,9 +76,9 @@ namespace traceur {
 		 * @param[in] y The y coordinate in the film.
 		 * @return A reference to the {@link Pixel}.
 		 */
-		inline virtual traceur::Pixel & operator()(int x, int y)
+		virtual traceur::Pixel & operator()(int x, int y)
 		{
-			return operator()(glm::ivec2(x, y));
+			return this->operator()(glm::ivec2(x, y));
 		}
 
 		/**
@@ -88,7 +88,7 @@ namespace traceur {
 		 * @param[in] y The y coordinate in the film.
 		 * @return The pixel value.
 		 */
-		inline virtual traceur::Pixel operator()(const glm::ivec2 &) const = 0;
+		virtual traceur::Pixel operator()(const glm::ivec2 &) const = 0;
 
 		/**
 		 * Return the pixel value to a {@link Pixel} in this film.
@@ -96,9 +96,9 @@ namespace traceur {
 		 * @param[in] pos The position within the film.
 		 * @return The pixel value.
 		 */
-		inline virtual traceur::Pixel operator()(int x, int y) const
+		virtual traceur::Pixel operator()(int x, int y) const
 		{
-			return operator()(glm::ivec2(x, y));
+			return this->operator()(glm::ivec2(x, y));
 		}
 
 	};
@@ -120,7 +120,7 @@ namespace traceur {
 		 * @param[in] height The height of the film.
 		 */
 		DirectFilm(int width, int height) :
-			Film(width, height), buffer(std::vector<traceur::Pixel>(static_cast<size_t>(std::max(0, width * height)))) {}
+			Film(width, height), buffer(static_cast<size_t>(std::max(0, width * height))) {}
 
 		/**
 		 * Return the reference to a {@link Pixel} in this film.
@@ -174,7 +174,7 @@ namespace traceur {
 		/**
 		 * The partitions of this film.
 		 */
-		std::vector<T> partitions;
+		std::vector<std::unique_ptr<T>> partitions;
 
 		/**
 		 * The minimum width of a partition.
@@ -213,17 +213,30 @@ namespace traceur {
 		PartitionedFilm(int width, int height, int n, Args&&... args)
 			: Film(width, height), n(n)
 		{
-			rows = static_cast<int>(floor(sqrt(n)));
-			columns = static_cast<int>(ceil(n / rows));
+
+			/*
+			 * Algorithm for dividing rectangles into n partitions, which is
+			 * basically finding the factors p and q in the equation n = p*q.
+			 */
+			columns = static_cast<int>(sqrt(n));
+			while (n % columns != 0) {
+				columns--;
+			}
+			rows = n / columns;
+
+			/* Calculate size of partitions */
 			px = width / columns;
 			py = height / rows;
 			int rx = width % columns;
 			int ry = height % rows;
 
+			/* Reserve space for n partitions */
+			partitions.reserve(static_cast<size_t>(n));
+
 			/* Create partitions of the specified size and amount of partitions */
 			for (int row = 0; row < rows; row++) {
 				for (int column = 0; column < columns; column++) {
-					partitions.push_back(T(
+					partitions.emplace_back(std::make_unique<T>(
 						px + (column == columns - 1) * rx,
 						py + (row == rows - 1) * ry,
 						std::forward<Args>(args)...
@@ -233,14 +246,14 @@ namespace traceur {
 		}
 
 		/**
-		 * Return a reference to a partition in this film.
+		 * Return an unowned reference to a partition in this film.
 		 *
 		 * @param[in] n The number of partition to get.
 		 * @return The partition to get.
 		 */
 		inline T & operator()(int n)
 		{
-			return partitions[n];
+			return *partitions[n];
 		}
 
 		/**
@@ -268,7 +281,7 @@ namespace traceur {
 			int j = std::min(pos.x / px, columns - 1);
 			int i = std::min(pos.y / py, rows - 1);
 			int n = i * columns + j;
-			return partitions[n](pos - offset(n));
+			return partitions[n]->operator()(pos - offset(n));
 		}
 
 		/**
@@ -282,7 +295,7 @@ namespace traceur {
 			int j = std::min(pos.x / px, columns - 1);
 			int i = std::min(pos.y / py, rows - 1);
 			int n = i * columns + j;
-			return partitions[n](pos - offset(n));
+			return partitions[n]->operator()(pos - offset(n));
 		}
 	};
 }
