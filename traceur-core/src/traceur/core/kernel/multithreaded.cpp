@@ -25,19 +25,26 @@
 #include <traceur/core/kernel/multithreaded.hpp>
 
 traceur::MultithreadedKernel::MultithreadedKernel(const std::shared_ptr<traceur::Kernel> kernel,
-												  int workers, int partitions) :
-	kernel(kernel), workers(workers), partitions(partitions),
-	range(std::pair<int, int>(0, partitions)), pool(workers) {}
+												  int workers,
+												  int partitions)
+	: workers(workers),
+	  partitions(partitions),
+	  range(std::pair<int, int>(0, partitions)),
+	  kernel(kernel),
+	  pool(workers) {}
 
 traceur::MultithreadedKernel::MultithreadedKernel(const std::shared_ptr<traceur::Kernel> kernel,
-												  int workers, int partitions,
-												  std::pair<int, int> range) :
-	kernel(kernel), workers(workers), partitions(partitions),
-	range(range), pool(workers) {}
+												  int workers,
+												  int partitions,
+												  std::pair<int, int> range)
+	: workers(workers),
+	  partitions(partitions),
+	  range(range),
+	  kernel(kernel),
+	  pool(workers) {}
 
-std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(
-		const traceur::Scene &scene,
-		const traceur::Camera &camera) const
+std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(const traceur::Scene &scene,
+																	const traceur::Camera &camera) const
 {
 	/* Notify observers about start */
 	for (auto &observer : observers) {
@@ -46,9 +53,9 @@ std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(
 
 	/* Create a partitioned film for the render job */
 	auto film = std::make_unique<traceur::PartitionedFilm<traceur::DirectFilm>>(
-			camera.viewport[2],
-			camera.viewport[3],
-			partitions
+		camera.viewport[2],
+		camera.viewport[3],
+		partitions
 	);
 
 	auto jobs = std::queue<std::future<void>>();
@@ -88,19 +95,20 @@ std::unique_ptr<traceur::Film> traceur::MultithreadedKernel::render(
 	return std::move(film);
 }
 
-void traceur::MultithreadedKernel::render(
-		const traceur::Scene &scene,
-		const traceur::Camera &camera,
-		traceur::Film &film,
-		const glm::ivec2 &offset) const
+void traceur::MultithreadedKernel::render(const traceur::Scene &scene,
+										  const traceur::Camera &camera,
+										  traceur::Film &film,
+										  const glm::ivec2 &offset) const
 {
+	// XXX This method does not make use of the thread pool
 	kernel->render(scene, camera, film, offset);
 }
 
-traceur::MultithreadedKernelPool::MultithreadedKernelPool(int workers) : stop(false)
+traceur::MultithreadedKernelPool::MultithreadedKernelPool(int workers)
+	: stop(false)
 {
 	/* Create the worker threads */
-	for(int i = 0; i < workers; i++) {
+	for (int i = 0; i < workers; i++) {
 		pool.push_back(std::thread(traceur::MultithreadedKernelWorker(*this)));
 	}
 }
@@ -119,17 +127,18 @@ traceur::MultithreadedKernelPool::~MultithreadedKernelPool()
 void traceur::MultithreadedKernelWorker::operator()()
 {
 	std::function<void()> job;
-	while(true)
-	{
+	while (true) {
 		{
 			/* Lock the queue */
 			std::unique_lock<std::mutex> lock(pool.mutex);
 
 			/* Wait for available jobs */
-			pool.condition.wait(lock, [this]{ return pool.stop || !pool.jobs.empty(); });
+			pool.condition.wait(lock, [this] {
+				return pool.stop || !pool.jobs.empty();
+			});
 
 			/* Stop the worker if needed */
-			if(pool.stop && pool.jobs.empty())
+			if (pool.stop && pool.jobs.empty())
 				return;
 
 			/* Poll a render job from the queue */
