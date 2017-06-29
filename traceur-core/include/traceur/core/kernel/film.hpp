@@ -24,8 +24,9 @@
 #ifndef TRACEUR_CORE_KERNEL_FILM_H
 #define TRACEUR_CORE_KERNEL_FILM_H
 
-#include <vector>
 #include <algorithm>
+#include <memory>
+#include <vector>
 
 #include <glm/glm.hpp>
 #include <traceur/core/kernel/pixel.hpp>
