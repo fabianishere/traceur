@@ -33,13 +33,19 @@
 #include <traceur/frontend/glut/renderer.hpp>
 
 
-void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Node &node) {
+
+void traceur::GLUTSceneRenderer::render()
+{
+	scene->graph->accept(*this);
+}
+
+void traceur::GLUTSceneRenderer::visit(const traceur::Node &node) {
 	if (draw_bounding_box) {
 		visit_bounding_box(node.bounding_box());
 	}
 }
 
-void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Sphere &sphere)
+void traceur::GLUTSceneRenderer::visit(const traceur::Sphere &sphere)
 {
 	auto o = sphere.origin;
 	glPushMatrix();
@@ -49,7 +55,7 @@ void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Sphere &sphere)
 	glPopMatrix();
 }
 
-void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Triangle &triangle)
+void traceur::GLUTSceneRenderer::visit(const traceur::Triangle &triangle)
 {
 	glBegin(GL_TRIANGLES);
 		glColor3fv(glm::value_ptr(triangle.material->diffuse));
@@ -102,7 +108,7 @@ void draw_box(const traceur::Box &box, const glm::vec3 &color) {
 }
 
 
-void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Box &box)
+void traceur::GLUTSceneRenderer::visit(const traceur::Box &box)
 {
 	draw_box(box, box.material->diffuse);
 
@@ -111,7 +117,7 @@ void traceur::OpenGLSceneGraphVisitor::visit(const traceur::Box &box)
 	}
 }
 
-void traceur::OpenGLSceneGraphVisitor::visit_bounding_box(const traceur::Box &box)
+void traceur::GLUTSceneRenderer::visit_bounding_box(const traceur::Box &box)
 {
 	/* Draw wireframe */
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

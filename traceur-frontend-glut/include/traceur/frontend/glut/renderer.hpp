@@ -21,9 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef TRACEUR_FRONTEND_GLUT_VISITOR_H
-#define TRACEUR_FRONTEND_GLUT_VISITOR_H
+#ifndef TRACEUR_FRONTEND_GLUT_RENDERER_H
+#define TRACEUR_FRONTEND_GLUT_RENDERER_H
 
+#include <traceur/core/scene/scene.hpp>
 #include <traceur/core/scene/graph/visitor.hpp>
 #include <traceur/core/scene/primitive/sphere.hpp>
 #include <traceur/core/scene/primitive/triangle.hpp>
@@ -33,20 +34,32 @@ namespace traceur {
 	 * A visitor of the {@link SceneGraph} that traverses the graph and renders
 	 * all elements of the scene into an OpenGL window.
 	 */
-	class OpenGLSceneGraphVisitor: public SceneGraphVisitor {
+	class GLUTSceneRenderer: public SceneGraphVisitor {
 	public:
+		/**
+		 * The {@link Scene} to render.
+		 */
+		std::shared_ptr<traceur::Scene> scene;
+
 		/**
 		 * A flag to indicate whether bounding boxes should be drawn.
 		 */
 		bool draw_bounding_box = false;
 
 		/**
-		 * Construct a {@link OpenGLSceneGraphVisitor} instance.
+		 * Construct a {@link OpenGLSceneRenderer} instance.
 		 *
+		 * @param[in] scene The scene to render.
 		 * @param[in] draw_bounding_box A  flag to indicate whether bounding boxes
 		 * should be drawn.
 		 */
-		OpenGLSceneGraphVisitor(bool draw_bounding_box) : draw_bounding_box(draw_bounding_box) {}
+		GLUTSceneRenderer(std::shared_ptr<traceur::Scene> &scene, bool draw_bounding_box) :
+			scene(scene), draw_bounding_box(draw_bounding_box) {}
+
+		/**
+		 * Render the scene into the current OpenGL context.
+		 */
+		void render();
 
 		/**
 		 * Visit a {@link Node} in the scene graph.
@@ -85,4 +98,4 @@ namespace traceur {
 	};
 }
 
-#endif /* TRACEUR_FRONTEND_GLUT_VISITOR_H */
+#endif /* TRACEUR_FRONTEND_GLUT_RENDERER_H */

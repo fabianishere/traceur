@@ -28,8 +28,8 @@
 
 #include <traceur/frontend/glut/renderer.hpp>
 #include <traceur/frontend/glut/progress.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/string_cast.hpp>
+#include <traceur/frontend/glut/preview.hpp>
+#include <traceur/frontend/glut/debug.hpp>
 
 #include "traqueboule.h"
 
@@ -37,19 +37,18 @@
 // The rendering kernel to use
 std::unique_ptr<traceur::MultithreadedKernel> kernel;
 // The scene we want to render
-std::unique_ptr<traceur::Scene> scene;
+std::shared_ptr<traceur::Scene> scene;
 // The scene graph visitor to draw the scene.
-std::unique_ptr<traceur::OpenGLSceneGraphVisitor> visitor;
+std::unique_ptr<traceur::GLUTSceneRenderer> renderer;
+// The preview observer
+std::shared_ptr<traceur::GLUTPreviewObserver> preview;
+// The debug tracer we use to preview test rays
+std::unique_ptr<traceur::DebugTracer> debug;
 // The exporter we use to export the result
 std::unique_ptr<traceur::Exporter> exporter;
 // The resulting film. This global variable prevents the film from going out
 // of scope for the real-time preview render.
 std::unique_ptr<traceur::Film> result;
-
-// Test rays
-std::vector<std::tuple<glm::vec3, glm::vec3, const traceur::Primitive *, int>> rays;
-// Real time
-std::vector<std::tuple<glm::ivec2, glm::ivec2, bool>> parts;
 
 // The default model to load
 const std::string DEFAULT_MODEL_PATH = "assets/dodge.obj";
@@ -60,8 +59,6 @@ const unsigned int WindowSize_Y = 800;  // resolution Y
 // Projection settings
 const float zNear = 0.01f;
 const float zFar = 30.f;
-// Options
-bool preview = false;
 
 /**
  * Initialises the front-end.
@@ -77,7 +74,7 @@ void init(std::string &path)
 	scene->lights.push_back(getCameraPosition());
 	printf("[main] Loaded scene with %zu nodes\n", scene->graph->size());
 
-	int threads = std::thread::hardware_concurrency() - 1;
+	int threads = std::thread::hardware_concurrency();
 	int partitions = 64 * threads;
 
 	kernel = std::make_unique<traceur::MultithreadedKernel>(
@@ -85,9 +82,13 @@ void init(std::string &path)
 		threads,
 		partitions
 	);
-	visitor = std::make_unique<traceur::OpenGLSceneGraphVisitor>(false);
+	renderer = std::make_unique<traceur::GLUTSceneRenderer>(scene, false);
+	preview = std::make_shared<traceur::GLUTPreviewObserver>();
+	debug = std::make_unique<traceur::DebugTracer>(scene, 10);
 	exporter = std::make_unique<traceur::PPMExporter>();
+
 	kernel->add_observer(std::make_shared<traceur::ConsoleProgressObserver>(30));
+	kernel->add_observer(preview);
 }
 
 /**
@@ -115,8 +116,12 @@ void render(const glm::ivec4 &viewport)
 */
 void draw()
 {
-	// Draw the loaded scene graph
-	scene->graph->accept(*visitor);
+	// Render the scene graph
+	renderer->render();
+	// Draw test rays
+	debug->render();
+	// Draw real-time preview
+	preview->render();
 
 	//let's draw the lights in the scene as points
 	glPushAttrib(GL_ALL_ATTRIB_BITS); //store all GL attributes
@@ -133,68 +138,6 @@ void draw()
 	//e.g., even though inside the two calls, we set
 	//the color to white, it will be reset to the previous
 	//state after the pop.
-
-	//as an example: we draw the test ray, which is set by the keyboard function
-	glPushAttrib(GL_ALL_ATTRIB_BITS);
-	glDisable(GL_LIGHTING);
-	glBegin(GL_LINES);
-		for (auto &ray : rays) {
-			auto primitive = std::get<2>(ray);
-			if (primitive) {
-				glColor3fv(glm::value_ptr(primitive->material->diffuse));
-			} else {
-				glColor3f(0, 1, std::get<3>(ray) / 25);
-			}
-			glVertex3fv(glm::value_ptr(std::get<0>(ray)));
-			glVertex3fv(glm::value_ptr(std::get<1>(ray)));
-		}
-	glEnd();
-	glPointSize(10);
-	glBegin(GL_POINTS);
-		for (auto &light : scene->lights) {
-			glVertex3fv(glm::value_ptr(light));
-		}
-	glEnd();
-	glPopAttrib();
-
-	/* Draw real-time preview */
-	if (preview) {
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
-		gluOrtho2D(0, 800, 0, 800);
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		glLoadIdentity();
-		glTranslated(0, 0, 0);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-		/* Draw render progress */
-		for (auto &part : parts) {
-			auto size = std::get<0>(part);
-			auto offset = std::get<1>(part);
-			bool finished = std::get<2>(part);
-
-			glBegin(GL_QUADS);
-				if (finished) {
-					glColor3f(0.f, 255.f, 0.f);
-				} else {
-					glColor3f(255.f, 0.f, 0.f);
-				}
-				float depth = !finished / 1000.f;
-				glVertex3f(offset.x + size.x, offset.y + size.y, depth);
-				glVertex3f(offset.x, offset.y + size.y, depth);
-				glVertex3f(offset.x, offset.y, depth);
-				glVertex3f(offset.x + size.x, offset.y, depth);
-			glEnd();
-		}
-
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-	}
 }
 
 /**
@@ -304,122 +247,6 @@ void reshape(int w, int h)
 }
 
 /**
- * Transform the x and y position on the screen into the corresponding 3D world
- * position.
- */
-void produceRay(int x_I, int y_I, glm::vec3 &origin, glm::vec3 &destination)
-{
-	glm::ivec4 viewport;
-	glm::mat4x4 model;
-	glm::mat4x4 projection;
-	glGetFloatv(GL_MODELVIEW_MATRIX, glm::value_ptr(model));
-	glGetFloatv(GL_PROJECTION_MATRIX, glm::value_ptr(projection));
-	glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
-	int y_new = viewport[3] - y_I;
-	origin = glm::unProject(glm::vec3(x_I, y_new, 0), model, projection, viewport);
-	destination = glm::unProject(glm::vec3(x_I, y_new, 1), model, projection, viewport);
-}
-
-/* Forward Declaration */
-bool computeTestRays(const traceur::Ray &, int);
-
-/**
- * Computes the reflection ray given the hit context.
- *
- * @param[in] ray The ray to use.
- * @param[in] hit The hit structure to use.
- * @param[in] depth The depth of the recursion.
- */
-void computeReflection(const traceur::Ray &ray, const traceur::Hit &hit, int depth)
-{
-	auto reflect = glm::reflect(ray.direction, hit.normal);
-	bool intersects = computeTestRays(traceur::Ray(
-		hit.position + reflect * 0.000001f,
-		reflect
-	), depth + 1);
-
-	// Also show reflection rays that do not intersect a primitive
-	if (!intersects) {
-		rays.emplace_back(hit.position, hit.position + reflect, hit.primitive, depth + 1);
-	}
-}
-
-/**
- * Computes the refraction ray given the hit context.
- *
- * @param[in] ray The ray to use.
- * @param[in] hit The hit structure to use.
- * @param[in] depth The depth of the recursion.
- */
-void computeRefraction(const traceur::Ray &ray, const traceur::Hit &hit, int depth)
-{
-	float sourceDestRefraction;
-	glm::vec3 refractionNormal;
-
-	if(glm::dot(hit.normal, ray.direction) < 0.f) {
-		// enter material
-		sourceDestRefraction = 1.f / hit.primitive->material->opticalDensity;
-		refractionNormal = hit.normal;
-	} else {
-		// exit material
-		sourceDestRefraction = hit.primitive->material->opticalDensity / 1.f;
-		refractionNormal = - hit.normal;
-	}
-
-	glm::vec3 refract = glm::refract(ray.direction, refractionNormal,
-									 sourceDestRefraction);
-
-	if (!glm::isnan(refract).length()) {
-		traceur::Hit next(hit);
-		// Full internal ray reflection
-		next.normal = refractionNormal;
-		return computeReflection(ray, next, depth + 1);
-	}
-	rays.emplace_back(hit.position, hit.position +  0.000001f * refract, hit.primitive, depth);
-}
-
-/**
- * Computes the test rays to draw given a ray.
- *
- * @param[in] ray The ray to use.
- * @param[in] depth The depth of the recursion.
- * @return <code>true</code> if there was an intersection, <code>false</code>
- * otherwise.
- */
-bool computeTestRays(const traceur::Ray &ray, int depth)
-{
-	/* Allow max recursion depth of ten */
-	if (depth > 10) {
-		return false;
-	}
-
-	traceur::Hit hit;
-	if (scene->graph->intersect(ray, hit)) {
-		rays.emplace_back(ray.origin, hit.position, hit.primitive, depth);
-		computeReflection(ray, hit, depth);
-		computeRefraction(ray, hit, depth);
-		return true;
-	}
-
-	return false;
-}
-
-/**
- * Computes the test rays for the given position of the screen.
- *
- * @param[in] x The x-coordinate on the screen.
- * @param[in] y The y-coordinate on the screen.
- */
-void computeTestRays(int x, int y)
-{
-	glm::vec3 origin, destination;
-	// Produce the ray for the current mouse position
-	produceRay(x, y, origin, destination);
-	rays.clear();
-	computeTestRays(traceur::Ray(origin, destination - origin), 0);
-}
-
-/**
  * This method is invoked on keyboard input.
  */
 void keyboard(unsigned char key, int x, int y)
@@ -437,7 +264,8 @@ void keyboard(unsigned char key, int x, int y)
 		glm::ivec4 viewport;
 		glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
 
-		// Render the current scene on another thread
+		// Render the current scene on another thread, so that we do not freeze
+		// the ui thread.
 		std::thread([viewport]() {
 			render(viewport);
 		}).detach();
@@ -445,15 +273,15 @@ void keyboard(unsigned char key, int x, int y)
 	}
 	case 'b':
 		// Enable/disable bounding boxes visuals
-		visitor->draw_bounding_box = !visitor->draw_bounding_box;
+		renderer->draw_bounding_box = !renderer->draw_bounding_box;
 		break;
 	case 't':
 		// Draw test ray
-		computeTestRays(x, y);
+		debug->trace(x, y);
 		break;
 	case 'p':
 		// Enable/disable real-time preview
-		preview = !preview;
+		preview->enabled = !preview->enabled;
 		break;
 	case 27:
 		exit(0);
