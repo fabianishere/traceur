@@ -21,19 +21,95 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef TRACEUR_FRONTEND_GLUT_OBSERVER_H
-#define TRACEUR_FRONTEND_GLUT_OBSERVER_H
+#ifndef TRACEUR_FRONTEND_GLUT_PROGRESS_H
+#define TRACEUR_FRONTEND_GLUT_PROGRESS_H
 
 #include <atomic>
 #include <chrono>
+#include <cstdio>
+
 #include <traceur/core/kernel/observer.hpp>
 
 namespace traceur {
 	/**
-	 * A progress observer for the GLUT frontend.
+	 * A duration of time in wall and cpu time which a render job or partition took to render.
 	 */
-	class ProgressObserver : public KernelObserver {
+	struct TimeDuration {
+		/**
+		 * Construct a {@link TimeDuration} instance.
+		 *
+		 * @param[in] wall The duration in wall time (seconds).
+		 * @param[in] cpu The duration in cpu time (seconds).
+		 */
+		TimeDuration(double, double);
+
+		/**
+		 * The duration in wall time (seconds).
+		 */
+		double wall;
+
+		/**
+		 * The duration in cpu time (seconds).
+		 */
+		double cpu;
+	};
+
+	/**
+	 * A point in (wall and cpu) time, which can be used for calculations about the duration of a render job.
+	 */
+	struct TimePoint {
+		/**
+		 * Construct a {@link TimePoint} instance at the current point in wall and cpu time.
+		 */
+		TimePoint();
+
+		/**
+		 * Calculate the difference between two time points.
+		 *
+		 * @param[in] that The other time point to subtract.
+		 */
+		traceur::TimeDuration operator-(const traceur::TimePoint &) const;
+
+		/**
+		 * The time point in wall time.
+		 */
+		std::chrono::time_point<std::chrono::high_resolution_clock> wall;
+
+		/**
+		 * The time point in cpu time.
+		 */
+		time_t cpu;
+	};
+
+	/**
+	 * This structure represents the progress of the render job in the partitions that need to be rendered,
+	 * the partitions that have been rendered.
+	 */
+	struct Progress {
+		/**
+		 * The amount of partitions that have finished.
+		 */
+		std::atomic_int finished;
+
+		/**
+		 * The amount of partitions being used.
+		 */
+		int total;
+	};
+
+	/**
+	 * A progress {@link KernelObserver} for the GLUT frontend, which tracks the progress of the render job and
+	 * the partitions that have been rendered and reports this to the standard output stream (stdout).
+	 */
+	class ConsoleProgressObserver : public KernelObserver {
 	public:
+		/**
+		 * Construct a {@link ProgressObserver} instance.
+		 *
+		 * @param[in] length The length of the progress bar.
+		 */
+		ConsoleProgressObserver(size_t length) : bar(length) {}
+
 		/**
 		 * This method is invoked when a render job is started on the kernel.
 		 *
@@ -45,7 +121,7 @@ namespace traceur {
 		virtual void renderStarted(const traceur::Kernel &,
 								   const traceur::Scene &,
 								   const traceur::Camera &,
-								   int) final;
+								   int) override final;
 
 		/**
 		 * This method is invoked when a render job of a partition is started on
@@ -59,7 +135,7 @@ namespace traceur {
 		virtual void partitionStarted(const traceur::Kernel &,
 									  int,
 									  const traceur::Film &,
-									  const glm::ivec2 &) final;
+									  const glm::ivec2 &) override final;
 
 		/**
 		 * This method is invoked when a render job of a partition is finished
@@ -74,7 +150,7 @@ namespace traceur {
 		virtual void partitionFinished(const traceur::Kernel &,
 									   int,
 									   const traceur::Film &,
-									   const glm::ivec2 &) final;
+									   const glm::ivec2 &) override final;
 
 		/**
 		 * This method is invoked when a render job is finished on the kernel.
@@ -83,29 +159,34 @@ namespace traceur {
 		 * @param[in] film The {@link Film} the kernel has rendered the scene on.
 		 */
 		virtual void renderFinished(const traceur::Kernel &,
-									const traceur::Film &) final;
+									const traceur::Film &) override final;
 
 	private:
 		/**
-		 * The amount of partitions that have finished.
+		 * The progress of the render job.
 		 */
-		std::atomic_int finished;
+		traceur::Progress progress;
 
 		/**
-		 * The amount of partitions being used.
+		 * The starting {@link TimePoint} of the render job.
 		 */
-		int partitions;
+		traceur::TimePoint start;
 
 		/**
-		 * The starting point in wall time.
+		 * The starting {@link TimePoint}s of the partitions.
 		 */
-		std::chrono::time_point<std::chrono::high_resolution_clock> wall;
+		std::vector<traceur::TimePoint> partition_start;
 
 		/**
-		 * The starting point in cpu time.
+		 * The starting {@link TimePoint}s of the partitions.
 		 */
-		time_t cpu;
+		std::vector<traceur::TimePoint> partition_end;
+
+		/**
+		 * The characters of the progress bar.
+		 */
+		std::vector<char> bar;
 	};
 }
 
-#endif /* TRACEUR_FRONTEND_GLUT_OBSERVER_H */
+#endif /* TRACEUR_FRONTEND_GLUT_PROGRESS_H */
