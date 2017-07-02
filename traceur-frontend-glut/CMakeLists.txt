@@ -106,7 +106,7 @@ add_executable(traceur-frontend-glut
 	src/frontend/glut/trackball.cpp
 )
 target_include_directories(traceur-frontend-glut PRIVATE include/)
-target_link_libraries(traceur-frontend-glut traceur-loader-obj traceur-exporter-ppm GLUT::GLUT OpenGL::GLU)
+target_link_libraries(traceur-frontend-glut traceur-loader-wavefront traceur-exporter-ppm GLUT::GLUT OpenGL::GLU)
 
 # Copy sample assets in build directory
 add_custom_command(TARGET traceur-frontend-glut

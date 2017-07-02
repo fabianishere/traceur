@@ -37,7 +37,7 @@
 #include <traceur/core/scene/graph/factory.hpp>
 #include <traceur/core/scene/graph/vector.hpp>
 #include <traceur/core/scene/graph/kdtree.hpp>
-#include <traceur/loader/obj.hpp>
+#include <traceur/loader/wavefront.hpp>
 #include <traceur/exporter/ppm.hpp>
 
 /**
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
 
 	/* Scene loaders and exporters */
 	auto factory = traceur::make_factory<traceur::KDTreeSceneGraphBuilder>();
-	auto loader = std::make_unique<traceur::ObjLoader>(std::move(factory));
+	auto loader = std::make_unique<traceur::WavefrontLoader>(std::move(factory));
 	auto exporter = std::make_unique<traceur::PPMExporter>();
 
 	/* Tracing and scheduling kernels */
