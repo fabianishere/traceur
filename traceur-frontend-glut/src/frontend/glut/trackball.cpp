@@ -80,8 +80,8 @@ void traceur::GLUTTrackball::motion(int x, int y)
 
         if (rotate) {
 			auto translation = glm::vec3(camera.view()[3]);
-			float angle = std::sqrtf(dx * dx + dy*dy + dx*dx + dy*dy) * speed;
-			if (std::fabs(angle) > 0.f) {
+			float angle = std::sqrt(dx * dx + dy*dy + dx*dx + dy*dy) * speed;
+			if (std::abs(angle) > 0.f) {
 				view = glm::translate(view, -translation);
 				view = glm::rotate(view, glm::radians(angle), glm::normalize(glm::vec3((int) -dy, (int) dx, 0)));
 				view[3] = glm::vec4(translation, 1);
@@ -89,14 +89,14 @@ void traceur::GLUTTrackball::motion(int x, int y)
         } else if (translate) {
 			view[3][0] += dx / 100.f * speed;
 			view[3][1] += dy / 100.f * speed;
-        } else if (std::fabs(dx) > std::fabs(dy)) {
+        } else if (std::abs(dx) > std::abs(dy)) {
 			auto translation = glm::vec3(view[3]);
-			if (std::fabs(dx) > 0.f) {
+			if (std::abs(dx) > 0.f) {
 				view = glm::translate(view, -translation);
 				view = glm::rotate(view, glm::radians(dx), glm::vec3(0, 0, -1));
 				view[3] = glm::vec4(translation, 1);
 			}
-        } else if (std::fabs(dy) > std::fabs(dx)) {
+        } else if (std::abs(dy) > std::abs(dx)) {
 			view[3][2] -= -dy / 100.0f * speed;
         }
 		previous = glm::ivec2(x, y);
