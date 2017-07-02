@@ -20,8 +20,8 @@
     abstracting away the raytracing kernels, acceleration structures, scene
     loaders and exporters.
 
-  * loader-obj
-    The loader-obj module provides a basic Wavefront 3d object scene loader, 
+  * loader-wavefront
+    The loader-wavefront module provides a basic Wavefront 3d object scene loader,
     with support for materials.
 
   * exporter-ppm
