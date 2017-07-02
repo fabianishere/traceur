@@ -37,7 +37,7 @@ namespace traceur {
 		 * An axis of the box.
 		 */
 		enum class Axis: int {
-			X = 0, Y = 1, Z = 1
+			X = 0, Y = 1, Z = 2
 		};
 
 		/**
