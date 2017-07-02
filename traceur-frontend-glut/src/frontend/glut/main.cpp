@@ -30,9 +30,7 @@
 #include <traceur/frontend/glut/progress.hpp>
 #include <traceur/frontend/glut/preview.hpp>
 #include <traceur/frontend/glut/debug.hpp>
-
-#include "traqueboule.h"
-
+#include <traceur/frontend/glut/trackball.hpp>
 
 // The rendering kernel to use
 std::unique_ptr<traceur::MultithreadedKernel> kernel;
@@ -42,6 +40,8 @@ std::shared_ptr<traceur::Scene> scene;
 std::unique_ptr<traceur::GLUTSceneRenderer> renderer;
 // The preview observer
 std::shared_ptr<traceur::GLUTPreviewObserver> preview;
+// The trackball to rotate around the scene
+std::unique_ptr<traceur::GLUTTrackball> trackball;
 // The debug tracer we use to preview test rays
 std::unique_ptr<traceur::DebugTracer> debug;
 // The exporter we use to export the result
@@ -63,15 +63,15 @@ const float zFar = 30.f;
 /**
  * Initialises the front-end.
  *
+ * @param[in] viewport The viewport of the window.
  * @param[in] path The path to the model to load.
  */
-void init(std::string &path)
+void init(const glm::ivec4 &viewport, const std::string &path)
 {
 	auto factory = traceur::make_factory<traceur::KDTreeSceneGraphBuilder>();
 	auto loader = std::make_unique<traceur::ObjLoader>(std::move(factory));
 	printf("[main] Loading model at path \"%s\"\n", path.c_str());
 	scene = loader->load(path);
-	scene->lights.push_back(getCameraPosition());
 	printf("[main] Loaded scene with %zu nodes\n", scene->graph->size());
 
 	int threads = std::thread::hardware_concurrency();
@@ -82,29 +82,31 @@ void init(std::string &path)
 		threads,
 		partitions
 	);
+
+	// Set up the initial camera
+	traceur::Camera camera = traceur::Camera(viewport)
+		.perspective(glm::radians(50.f), viewport.z / viewport.w, zNear, zFar)
+		.lookAt(glm::vec3(0, 0, 4), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
+
 	renderer = std::make_unique<traceur::GLUTSceneRenderer>(scene, false);
 	preview = std::make_shared<traceur::GLUTPreviewObserver>();
+	trackball = std::make_unique<traceur::GLUTTrackball>(camera, 0.2f);
 	debug = std::make_unique<traceur::DebugTracer>(scene, 10);
 	exporter = std::make_unique<traceur::PPMExporter>();
 
 	kernel->add_observer(std::make_shared<traceur::ConsoleProgressObserver>(30));
 	kernel->add_observer(preview);
+
+	scene->lights.push_back(camera.position());
 }
 
 /**
  * Render the scene into a file.
- *
- * @param[in] viewport The viewport to use for rendering.
  */
-void render(const glm::ivec4 &viewport)
+void render()
 {
-	// Set up the camera
-	traceur::Camera camera = traceur::Camera(viewport)
-			.lookAt(getCameraPosition(), getCameraDirection(), getCameraUp())
-			.perspective(glm::radians(50.f), viewport.z / viewport.w, zNear, zFar);
-
 	// Render the scene and capture the result
-	result = kernel->render(*scene, camera);
+	result = kernel->render(*scene, trackball->camera);
 
 	// Export the result to a file
 	exporter->write(*result, "result.ppm");
@@ -148,6 +150,16 @@ void animate()
 	glutPostRedisplay();
 }
 
+void mouse(int button, int state, int x, int y)
+{
+	trackball->mouse(button, state, x, y);
+}
+
+void motion(int x, int y)
+{
+	trackball->motion(x, y);
+}
+
 /* Forward declarations */
 void display(void);
 void reshape(int w, int h);
@@ -171,13 +183,6 @@ int main(int argc, char** argv)
 	glutInitWindowSize(WindowSize_X,WindowSize_Y);
 	glutCreateWindow(argv[0]);
 
-	// Initialize viewpoint
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glTranslatef(0, 0, -4);
-	tbInitTransform();     // This is for the trackball, please ignore
-	tbHelp();             // idem
-
 	// Activate the light following the camera
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
@@ -190,7 +195,6 @@ int main(int argc, char** argv)
 	glEnable(GL_NORMALIZE);
 	// Clear color of the background is black.
 	glClearColor(0.0, 0.0, 0.0, 0.0);
-
 
 	// Activate rendering modes
 	//activate depth test
@@ -206,14 +210,18 @@ int main(int argc, char** argv)
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
 	glutDisplayFunc(display);
-	glutMouseFunc(tbMouseFunc);    // trackball
-	glutMotionFunc(tbMotionFunc);  // uses mouse
+	glutMouseFunc(mouse);    // trackball
+	glutMotionFunc(motion);  // uses mouse
 	glutIdleFunc(animate);
 
-	std::string path = argc >= 2 ? argv[1] : DEFAULT_MODEL_PATH;
-	init(path);
+	// Get the viewport of the window
+	glm::ivec4 viewport;
+	glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
 
-	//main loop for glut... this just runs your application
+	std::string path = argc >= 2 ? argv[1] : DEFAULT_MODEL_PATH;
+	init(viewport, path);
+
+	// main loop for glut... this just runs your application
 	glutMainLoop();
 	return 0;
 }
@@ -227,7 +235,7 @@ void display(void)
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
-	tbVisuTransform();
+	trackball->transform();
 	draw();
 	glutSwapBuffers();
 	glPopAttrib();
@@ -240,9 +248,8 @@ void reshape(int w, int h)
 {
 	glViewport(0, 0, (GLsizei) w, (GLsizei) h);
 	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	//glOrtho (-1.1, 1.1, -1.1,1.1, -1000.0, 1000.0);
-	gluPerspective (50, (float)w/h, 0.01, 10);
+	trackball->camera = trackball->camera.perspective(glm::radians(50.f), w / h, zNear, zFar);
+	glLoadMatrixf(glm::value_ptr(trackball->camera.projection()));
 	glMatrixMode(GL_MODELVIEW);
 }
 
@@ -254,21 +261,15 @@ void keyboard(unsigned char key, int x, int y)
     switch (key) {
 	case 'L':
 		// Add/update a light based on the camera position.
-		scene->lights.push_back(getCameraPosition());
+		scene->lights.push_back(trackball->camera.position());
 		break;
 	case 'l':
-		scene->lights[scene->lights.size() - 1] = getCameraPosition();
+		scene->lights[scene->lights.size() - 1] = trackball->camera.position();
 		break;
 	case 'r': {
-		// Get the viewport of the window
-		glm::ivec4 viewport;
-		glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
-
 		// Render the current scene on another thread, so that we do not freeze
 		// the ui thread.
-		std::thread([viewport]() {
-			render(viewport);
-		}).detach();
+		std::thread([]() { render(); }).detach();
 		break;
 	}
 	case 'b':
@@ -287,4 +288,3 @@ void keyboard(unsigned char key, int x, int y)
 		exit(0);
 	}
 }
-

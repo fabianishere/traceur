@@ -96,14 +96,14 @@ add_executable(traceur-frontend-glut
 	include/traceur/frontend/glut/progress.hpp
 	include/traceur/frontend/glut/preview.hpp
 	include/traceur/frontend/glut/debug.hpp
-	include/matrix.h
-	include/traqueboule.h
+	include/traceur/frontend/glut/trackball.hpp
 
 	src/frontend/glut/main.cpp
 	src/frontend/glut/renderer.cpp
 	src/frontend/glut/progress.cpp
 	src/frontend/glut/preview.cpp
 	src/frontend/glut/debug.cpp
+	src/frontend/glut/trackball.cpp
 )
 target_include_directories(traceur-frontend-glut PRIVATE include/)
 target_link_libraries(traceur-frontend-glut traceur-loader-obj traceur-exporter-ppm GLUT::GLUT OpenGL::GLU)
