@@ -18,7 +18,7 @@ add_executable(traceur-frontend-cli
 	src/frontend/cli/main.cpp
 )
 target_include_directories(traceur-frontend-cli PRIVATE include/)
-target_link_libraries(traceur-frontend-cli traceur-loader-obj traceur-exporter-ppm getopt)
+target_link_libraries(traceur-frontend-cli traceur-loader-wavefront traceur-exporter-ppm getopt)
 
 # Copy sample assets in build directory
 add_custom_command(TARGET traceur-frontend-cli

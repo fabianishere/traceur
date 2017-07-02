@@ -13,9 +13,9 @@ add_library(CXX::FileSystem INTERFACE IMPORTED)
 set_target_properties(CXX::FileSystem PROPERTIES
 		INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/deps/filesystem")
 
-add_library(traceur-loader-obj STATIC
-	include/traceur/loader/obj.hpp
-	src/traceur/loader/obj.cpp
+add_library(traceur-loader-wavefront STATIC
+	include/traceur/loader/wavefront.hpp
+	src/traceur/loader/wavefront.cpp
 )
-target_include_directories(traceur-loader-obj PUBLIC include/)
-target_link_libraries(traceur-loader-obj traceur-core CXX::FileSystem)
+target_include_directories(traceur-loader-wavefront PUBLIC include/)
+target_link_libraries(traceur-loader-wavefront traceur-core CXX::FileSystem)

@@ -23,7 +23,7 @@
 #include <traceur/core/scene/graph/factory.hpp>
 #include <traceur/core/scene/graph/vector.hpp>
 #include <traceur/core/scene/graph/kdtree.hpp>
-#include <traceur/loader/obj.hpp>
+#include <traceur/loader/wavefront.hpp>
 #include <traceur/exporter/ppm.hpp>
 
 #include <traceur/frontend/glut/renderer.hpp>
@@ -69,7 +69,7 @@ const float zFar = 30.f;
 void init(const glm::ivec4 &viewport, const std::string &path)
 {
 	auto factory = traceur::make_factory<traceur::KDTreeSceneGraphBuilder>();
-	auto loader = std::make_unique<traceur::ObjLoader>(std::move(factory));
+	auto loader = std::make_unique<traceur::WavefrontLoader>(std::move(factory));
 	printf("[main] Loading model at path \"%s\"\n", path.c_str());
 	scene = loader->load(path);
 	printf("[main] Loaded scene with %zu nodes\n", scene->graph->size());

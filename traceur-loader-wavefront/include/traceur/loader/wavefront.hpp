@@ -21,25 +21,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef TRACEUR_LOADER_OBJ_H
-#define TRACEUR_LOADER_OBJ_H
+#ifndef TRACEUR_LOADER_WAVEFRONT_H
+#define TRACEUR_LOADER_WAVEFRONT_H
 
 #include <map>
 #include <traceur/loader/loader.hpp>
 
 namespace traceur {
 	/**
-	 * A {@link Loader} implementation that loads .obj model files.
+	 * A {@link Loader} implementation that loads Wavefront .obj model files.
 	 */
-	class ObjLoader: public Loader {
-	public:	
+	class WavefrontLoader: public Loader {
+	public:
 		/**
 		 * Construct a {@link Loader} instance.
 		 *
-		 * @param[in] factory The {@link SceneGraphBuilderFactory} to use to 
+		 * @param[in] factory The {@link SceneGraphBuilderFactory} to use to
 		 * create the scene graph builder.
 		 */
-		ObjLoader(const std::shared_ptr<traceur::SceneGraphBuilderFactory> factory) : 
+		WavefrontLoader(const std::shared_ptr<traceur::SceneGraphBuilderFactory> factory) :
 			Loader(factory) {}
 
 		/**
@@ -50,7 +50,7 @@ namespace traceur {
 		 * take ownership over.
 		 */
 		virtual std::unique_ptr<traceur::Scene> load(const std::string &) const final;
-		
+
 		/**
 		 * Load the materials of a scene into the given map.
 		 *
@@ -63,4 +63,4 @@ namespace traceur {
 	};
 }
 
-#endif /* TRACEUR_LOADER_OBJ_H */
+#endif /* TRACEUR_LOADER_WAVEFRONT_H */

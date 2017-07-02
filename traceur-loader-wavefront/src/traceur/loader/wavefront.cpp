@@ -28,15 +28,14 @@
 
 #include <glm/glm.hpp>
 
-#include <traceur/loader/obj.hpp>
+#include <traceur/loader/wavefront.hpp>
 #include <traceur/core/scene/primitive/triangle.hpp>
 #include <traceur/core/scene/graph/vector.hpp>
 
-// XXX Assume line has maximum lenght of 256 bytes (hack)
+// XXX Assume line has maximum length of 256 bytes (hack)
 constexpr unsigned int LINE_LEN = 256;
 
-std::unique_ptr<traceur::Scene> traceur::ObjLoader::load(const std::string
-														 &file) const
+std::unique_ptr<traceur::Scene> traceur::WavefrontLoader::load(const std::string &file) const
 {
 	auto builder = factory->create();
 	auto path = filesystem::path(file);
@@ -69,7 +68,7 @@ std::unique_ptr<traceur::Scene> traceur::ObjLoader::load(const std::string
 	while(in && !feof(in) && fgets(s, LINE_LEN, in))
 	{
 		// comment
-		if (s[0] == '#' || isspace(s[0]) || s[0] == '\0') 
+		if (s[0] == '#' || isspace(s[0]) || s[0] == '\0')
 			continue;
 
 		// material file
@@ -80,7 +79,7 @@ std::unique_ptr<traceur::Scene> traceur::ObjLoader::load(const std::string
 			int i;
 			for (i = 0; i < t.length(); ++i) {
 				if (t[i] < 32 || t[i] == 255) {
-					break; 
+					break;
 				}
 			}
 			auto matPath = filesystem::path(t.length() == i ? t : t.substr(0, i));
@@ -109,7 +108,7 @@ std::unique_ptr<traceur::Scene> traceur::ObjLoader::load(const std::string
 		else if (strncmp(s, "vt ", 3) == 0) {
 			// TODO add support for texture coordinates
 			//Vec3Df texCoords(0,0,0);
-		
+
 			//we only support 2d tex coords
 			////sscanf(s, "vt %f %f", &texCoords[0], &texCoords[1]);
 			////texcoords.push_back(texCoords);
@@ -134,12 +133,12 @@ std::unique_ptr<traceur::Scene> traceur::ObjLoader::load(const std::string
 
 				// overwrite next separator
 				// skip '/', '\n', ' ', '\0', '\r' <-- don't forget Windows
-				while (*p1 != '/' && *p1 != '\r' && *p1 != '\n' && 
+				while (*p1 != '/' && *p1 != '\r' && *p1 != '\n' &&
 					*p1 != ' ' && *p1 != '\0')
 				++p1;
 
 				// detect end of vertex
-				if (*p1 != '/') 
+				if (*p1 != '/')
 					endOfVertex = true;
 
 				// replace separator by '\0'
@@ -220,7 +219,8 @@ std::unique_ptr<traceur::Scene> traceur::ObjLoader::load(const std::string
 	return std::make_unique<traceur::Scene>(builder->build());
 }
 
-bool traceur::ObjLoader::loadMaterials(const std::string &path, std::map<std::string, std::shared_ptr<traceur::Material>> &materials) const
+bool traceur::WavefrontLoader::loadMaterials(const std::string &path,
+											 std::map<std::string, std::shared_ptr<traceur::Material>> &materials) const
 {
 	FILE * in = fopen(path.c_str(), "r");
 	if (!in) {
@@ -312,7 +312,7 @@ bool traceur::ObjLoader::loadMaterials(const std::string &path, std::map<std::st
 			// map_Bump, bump map
 			// map_d,  opacity map
 			// just skip this
-			// mat.textureName = t;	
+			// mat.textureName = t;
 		}
 		// transparency value
 		else if (strncmp(line, "Tr ", 3) == 0) {
