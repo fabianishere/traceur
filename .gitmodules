@@ -3,7 +3,7 @@
 	url = https://github.com/g-truc/glm.git
 [submodule "traceur-frontend-glut/deps/freeglut"]
 	path = traceur-frontend-glut/deps/freeglut
-	url = https://github.com/fabianishere/FreeGLUT.git
+	url = https://github.com/dcnieho/FreeGLUT.git
 [submodule "traceur-loader-wavefront/deps/filesystem"]
 	path = traceur-loader-wavefront/deps/filesystem
 	url = https://github.com/wjakob/filesystem
