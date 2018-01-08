@@ -1,52 +1,48 @@
 version: '{build}'
 clone_folder: c:\projects\traceur
 image:
-- Visual Studio 2015
-- Visual Studio 2017
+    - Visual Studio 2015
+    - Visual Studio 2017
 configuration:
-- Release
-- Debug
+    - Release
+    - Debug
 platform:
-- x64
+    - x64
 environment:
   USE_SYSTEM_GLM: OFF
   USE_SYSTEM_GLUT: OFF
   matrix:
-  - arch: Win64
+      - arch: Win64
 matrix:
-  fast_finish: true
+    fast_finish: true
 
-clone_script:
-- cmd: >-
-    git clone -q --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git %APPVEYOR_BUILD_FOLDER%
-
-    cd %APPVEYOR_BUILD_FOLDER%
-
-    git checkout -qf %APPVEYOR_REPO_COMMIT%
-
-    git submodule update --init --recursive
+# Install scripts (runs after repo cloning)
+install:
+    - cmd: git submodule update --init --recursive
 
 # skip unsupported combinations
 init:
-- set arch=
-- if "%arch%"=="Win64" ( set arch= Win64)
-- echo %arch%
-- echo %APPVEYOR_BUILD_WORKER_IMAGE%
-- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
-- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" ( set generator="Visual Studio 14 2015%arch%" )
-- echo %generator%
+    - set arch=
+    - if "%arch%"=="Win64" ( set arch= Win64)
+    - echo %arch%
+    - echo %APPVEYOR_BUILD_WORKER_IMAGE%
+    - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
+    - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" ( set generator="Visual Studio 14 2015%arch%" )
+    - echo %generator%
 
+# run CMake generator
 before_build:
-- cmd: >-
-    mkdir build
+    - cmd: >-
+        mkdir build
 
-    cd build
+        cd build
 
-    cmake --version
+        cmake --version
 
-    cmake .. -G %generator%
+        cmake .. -G %generator%
 
+# build Visual Studio project
 build:
-  project: c:\projects\traceur\build\traceur.sln
-  verbosity: minimal
-  parallel: true
+    project: c:\projects\traceur\build\traceur.sln
+    verbosity: minimal
+    parallel: true
