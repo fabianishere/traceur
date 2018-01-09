@@ -93,19 +93,19 @@ namespace traceur {
 		 *
 		 * @param[in] fov The field of view of the camera.
 		 * @param[in] aspect The aspect ratio of the camera.
-		 * @param[in] near The z-coordinate of the near clipping plane of the
+		 * @param[in] zNear The z-coordinate of the near clipping plane of the
 		 * camera.
-		 * @param[in] far The z-coordinate of the far clipping plane of the
+		 * @param[in] zFar The z-coordinate of the far clipping plane of the
 		 * camera.
 		 * @return A camera using perspective projection.
 		 */
 		traceur::Camera perspective(float fov, float aspect,
-									float near, float far) const noexcept
+									float zNear, float zFar) const noexcept
 		{
 			return traceur::Camera(
 				viewport,
 				m_view,
-				glm::perspective(fov, aspect, near, far)
+				glm::perspective(fov, aspect, zNear, zFar)
 			);
 		}
 
@@ -119,20 +119,20 @@ namespace traceur {
  		 * clipping plane.
  		 * @param[in] top The coordinate for the top horizontal
  		 * clipping plane.
- 		 * @param[in] near The z-coordinate of the near clipping plane of the
+ 		 * @param[in] zNear The z-coordinate of the near clipping plane of the
  		 * camera.
- 		 * @param[in] far The z-coordinate of the far clipping plane of the
+ 		 * @param[in] zFar The z-coordinate of the far clipping plane of the
  		 * camera.
  		 * @return A camera using orthographic projection.
  		 */
 		traceur::Camera orthographic(float left, float right,
 									 float bottom, float top,
-									 float near, float far) const noexcept
+									 float zNear, float zFar) const noexcept
 		{
 			return traceur::Camera(
 				viewport,
 				m_view,
-				glm::ortho(left, right, bottom, top, near, far)
+				glm::ortho(left, right, bottom, top, zNear, zFar)
 			);
 		}
 
